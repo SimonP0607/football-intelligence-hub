@@ -189,9 +189,11 @@ function Topbar({
 
       <GlobalSearch onOpenPalette={onOpenPalette} />
 
-      <div className="ml-auto flex items-center gap-2 sm:gap-3">
+      <div className="ml-auto flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
         <DataModeBadge />
-        <StatusBadge tone="warning">Research mode</StatusBadge>
+        <span className="hidden sm:inline-flex">
+          <StatusBadge tone="warning">Research mode</StatusBadge>
+        </span>
         <span className="hidden items-center gap-1.5 text-caption text-muted-foreground lg:flex">
           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-positive" />
           Last sync <span className="numeric">12:03 UTC</span>
@@ -207,7 +209,7 @@ function Topbar({
         <Link
           to="/settings"
           aria-label="Settings"
-          className="rounded-md p-1.5 text-muted-foreground hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="hidden rounded-md p-1.5 text-muted-foreground hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:block"
         >
           <Settings2 className="h-4 w-4" />
         </Link>
