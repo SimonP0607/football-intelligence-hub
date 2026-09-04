@@ -51,9 +51,9 @@ type MarketTab = (typeof marketTabs)[number];
 
 const marketKeyOf: Record<Exclude<MarketTab, "All markets">, MarketKey> = {
   "1X2": "1x2",
-  "Over/Under 2.5": "ou25",
+  "Over/Under 2.5": "over_under_25",
   BTTS: "btts",
-  "Double Chance": "dc",
+  "Double Chance": "double_chance",
 };
 
 function MatchCenter() {
@@ -313,37 +313,36 @@ function MatchCenter() {
                   label: "Provider payload",
                   detail: "API-Football · fixtures + odds endpoints",
                   at: null,
-                  ref: p?.rawPayloadHash ?? null,
+                  reference: p?.rawPayloadHash ?? null,
                 },
                 {
                   id: "raw",
                   label: "Raw payload",
                   detail: "Stored verbatim before normalisation",
                   at: null,
-                  ref: p?.rawPayloadHash ?? null,
+                  reference: p?.rawPayloadHash ?? null,
                 },
                 {
                   id: "fixture",
                   label: "Normalized fixture",
                   detail: `${f.home.name} vs ${f.away.name} · ${f.competition.name}`,
                   at: null,
-                  ref: f.id,
-                  to: { to: "/matches/$fixtureId", params: { fixtureId: f.id } },
+                  reference: f.id,
+                  to: { fixtureId: f.id },
                 },
                 {
                   id: "features",
                   label: "Feature snapshot",
                   detail: "Ratings, form and schedule features at cutoff",
                   at: p?.dataCutoff ?? null,
-                  ref: p?.featureVersion ?? null,
+                  reference: p?.featureVersion ?? null,
                 },
                 {
                   id: "prediction",
                   label: "Prediction",
                   detail: `${p?.model ?? EMPTY} ${p?.modelVersion ?? ""}`.trim(),
                   at: p?.createdAt ?? null,
-                  ref: p?.id ?? null,
-                  to: { to: "/models" },
+                  reference: p?.id ?? null,
                 },
                 {
                   id: "odds",
@@ -353,16 +352,14 @@ function MatchCenter() {
                     3,
                   )}`,
                   at: snapshot.data?.capturedAt ?? null,
-                  ref: p?.oddsSnapshotId ?? null,
-                  to: { to: "/odds" },
+                  reference: p?.oddsSnapshotId ?? null,
                 },
                 {
                   id: "decision",
                   label: "Decision",
                   detail: "Shadow mode — candidate recorded, never published",
                   at: null,
-                  ref: null,
-                  to: { to: "/picks" },
+                  reference: null,
                 },
               ]}
             />
