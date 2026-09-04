@@ -1,16 +1,37 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { ChevronRight, SearchX, TriangleAlert } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Panel, EmptyState } from "@/components/primitives/Panel";
-import { TableShell, THead, TH, TRow, TD, TableSkeleton } from "@/components/primitives/DataTable";
-import { DataStateBadge, ModelBadge, StatusBadge } from "@/components/primitives/StatusBadge";
+import {
+  TableShell,
+  THead,
+  TH,
+  SortableTH,
+  TRow,
+  TD,
+  TableSkeleton,
+  CardRow,
+} from "@/components/primitives/DataTable";
+import { DataStateBadge, ModelBadge } from "@/components/primitives/StatusBadge";
 import { CompetitionBadge, Numeric, TeamBadge } from "@/components/primitives/Indicators";
+import { DataModeBadge } from "@/components/system/DataMode";
+import { FreshnessBadge, freshnessFromState } from "@/components/system/Freshness";
+import { MetricLabel } from "@/components/system/InfoTip";
+import {
+  FilterBar,
+  SearchFilter,
+  SegmentedTabs,
+  SelectFilter,
+  ToggleFilter,
+} from "@/components/system/Filters";
+import { DateNav, formatDay } from "@/components/football/DateNav";
 import { queries } from "@/lib/api/resources";
 import { competitions } from "@/mock/data";
 import { pct, timeOf } from "@/lib/format";
-import type { FixtureStatus } from "@/types/domain";
-import { cn } from "@/lib/utils";
+import { useSortable } from "@/hooks/useSortable";
+import type { Fixture } from "@/types/domain";
 
 export const Route = createFileRoute("/matches/")({
   head: () => ({
@@ -31,171 +52,287 @@ export const Route = createFileRoute("/matches/")({
   component: MatchesPage,
 });
 
-const statusTabs: Array<{ key: FixtureStatus | "all"; label: string }> = [
-  { key: "upcoming", label: "Upcoming" },
-  { key: "live", label: "Live" },
-  { key: "finished", label: "Finished" },
-  { key: "all", label: "All" },
-];
+const TODAY = "2026-09-04";
+const tabs = ["All", "Upcoming", "Live", "Finished"] as const;
+type Tab = (typeof tabs)[number];
+
+type SortKey = "kickoff" | "competition" | "fixture" | "coverage" | "books";
 
 function MatchesPage() {
+  const navigate = useNavigate();
   const matches = useQuery(queries.matches);
-  const [status, setStatus] = useState<FixtureStatus | "all">("upcoming");
-  const [competition, setCompetition] = useState<string>("all");
-  const [oddsOnly, setOddsOnly] = useState(false);
-  const [modelOnly, setModelOnly] = useState(false);
 
-  const rows = useMemo(() => {
-    return (matches.data ?? []).filter((f) => {
-      if (status !== "all" && f.status !== status) return false;
+  const [day, setDay] = useState(TODAY);
+  const [tab, setTab] = useState<Tab>("All");
+  const [competition, setCompetition] = useState("all");
+  const [modelFilter, setModelFilter] = useState("all");
+  const [term, setTerm] = useState("");
+  const [oddsOnly, setOddsOnly] = useState(false);
+
+  const all = matches.data ?? [];
+  const sameDay = useMemo(() => all.filter((f) => f.kickoff.slice(0, 10) === day), [all, day]);
+
+  const counts = useMemo(
+    () => ({
+      All: sameDay.length,
+      Upcoming: sameDay.filter((f) => f.status === "upcoming").length,
+      Live: sameDay.filter((f) => f.status === "live").length,
+      Finished: sameDay.filter((f) => f.status === "finished").length,
+    }),
+    [sameDay],
+  );
+
+  const filtered = useMemo(() => {
+    const q = term.trim().toLowerCase();
+    return sameDay.filter((f) => {
+      if (tab !== "All" && f.status !== tab.toLowerCase()) return false;
       if (competition !== "all" && f.competition.id !== competition) return false;
-      if (oddsOnly && f.oddsState === "stale") return false;
-      if (modelOnly && f.modelStatus === "insufficient_data") return false;
+      if (modelFilter === "available" && f.modelStatus === "insufficient_data") return false;
+      if (modelFilter === "missing" && f.modelStatus !== "insufficient_data") return false;
+      if (oddsOnly && (f.oddsState === "stale" || f.oddsState === "failed")) return false;
+      if (
+        q &&
+        !`${f.home.name} ${f.away.name} ${f.competition.name} ${f.round}`.toLowerCase().includes(q)
+      )
+        return false;
       return true;
     });
-  }, [matches.data, status, competition, oddsOnly, modelOnly]);
+  }, [sameDay, tab, competition, modelFilter, oddsOnly, term]);
 
-  const selectCls =
-    "h-8 rounded-md border border-border bg-card px-2 text-xs text-foreground focus:border-border-strong focus:outline-none focus:ring-1 focus:ring-ring";
+  const { sorted, sort, toggle } = useSortable<Fixture, SortKey>(
+    filtered,
+    {
+      kickoff: (f) => f.kickoff,
+      competition: (f) => f.competition.name,
+      fixture: (f) => f.home.name,
+      coverage: (f) => f.marketCoverage,
+      books: (f) => f.bookmakerCount,
+    },
+    { key: "kickoff", direction: "asc" },
+  );
+
+  const stale = sameDay.filter((f) => f.oddsState === "stale" || f.dataQuality === "stale").length;
+
+  function reset() {
+    setTab("All");
+    setCompetition("all");
+    setModelFilter("all");
+    setOddsOnly(false);
+    setTerm("");
+  }
+
+  const open = (id: string) => navigate({ to: "/matches/$fixtureId", params: { fixtureId: id } });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <PageHeader
         breadcrumb={[{ label: "Operations" }, { label: "Matches" }]}
         title="Matches"
-        description="Every fixture the ingestion layer is tracking, with the state of its model output, prices and data quality."
-        actions={<StatusBadge tone="warning">Demo data</StatusBadge>}
+        description="Every fixture the ingestion layer tracks, with the state of its model output, prices and data quality."
+        actions={<DataModeBadge />}
       />
 
-      <div className="surface-panel flex flex-wrap items-center gap-3 px-3 py-2.5">
-        <div className="flex rounded-md border border-border p-0.5">
-          {statusTabs.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setStatus(t.key)}
-              className={cn(
-                "rounded px-2.5 py-1 text-xs transition-colors",
-                status === t.key
-                  ? "bg-elevated text-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {t.label}
-              {t.key === "live" ? (
-                <span className="ml-1.5 text-caption text-subtle-foreground">n/a</span>
-              ) : null}
-            </button>
-          ))}
-        </div>
-
-        <input type="date" defaultValue="2026-09-04" className={selectCls} aria-label="Date" />
-
-        <select
-          className={selectCls}
-          value={competition}
-          onChange={(e) => setCompetition(e.target.value)}
-          aria-label="Competition"
-        >
-          <option value="all">All competitions</option>
-          {competitions.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-
-        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <input
-            type="checkbox"
-            checked={modelOnly}
-            onChange={(e) => setModelOnly(e.target.checked)}
-            className="accent-[var(--primary)]"
-          />
-          Model available
-        </label>
-        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <input
-            type="checkbox"
-            checked={oddsOnly}
-            onChange={(e) => setOddsOnly(e.target.checked)}
-            className="accent-[var(--primary)]"
-          />
-          Odds available
-        </label>
-
-        <span className="numeric ml-auto text-caption text-subtle-foreground">
-          {rows.length} fixtures
-        </span>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <DateNav value={day} today={TODAY} onChange={setDay} />
+        <span className="numeric text-caption text-subtle-foreground">{formatDay(day)}</span>
       </div>
+
+      <SegmentedTabs tabs={tabs} value={tab} onChange={setTab} counts={counts} label="Fixture status" />
+
+      <FilterBar
+        onReset={reset}
+        meta={
+          <span className="numeric text-caption text-subtle-foreground">
+            {sorted.length} / {sameDay.length} fixtures
+          </span>
+        }
+      >
+        <SearchFilter
+          value={term}
+          onChange={setTerm}
+          placeholder="Team, competition, round"
+          className="w-full sm:w-56"
+        />
+        <SelectFilter
+          label="Competition"
+          value={competition}
+          onChange={setCompetition}
+          options={[
+            { value: "all", label: "All competitions" },
+            ...competitions.map((c) => ({ value: c.id, label: c.name })),
+          ]}
+        />
+        <SelectFilter
+          label="Model"
+          value={modelFilter}
+          onChange={setModelFilter}
+          options={[
+            { value: "all", label: "Any status" },
+            { value: "available", label: "Model available" },
+            { value: "missing", label: "Insufficient data" },
+          ]}
+        />
+        <ToggleFilter label="Usable odds only" checked={oddsOnly} onChange={setOddsOnly} />
+      </FilterBar>
+
+      {stale > 0 ? (
+        <div className="flex items-center gap-2 rounded-md border border-warning/30 bg-warning-soft px-3 py-2 text-xs">
+          <TriangleAlert aria-hidden className="h-3.5 w-3.5 shrink-0 text-warning" />
+          <span className="text-foreground/85">
+            {stale} fixture{stale > 1 ? "s" : ""} on this date have stale captures. Edge values on
+            those rows are not decision-grade.
+          </span>
+        </div>
+      ) : null}
 
       <Panel bodyClassName="">
         {matches.isLoading ? (
-          <TableSkeleton rows={8} cols={8} />
-        ) : rows.length === 0 ? (
+          <TableSkeleton rows={8} cols={9} />
+        ) : matches.isError ? (
           <EmptyState
-            title="No fixtures match these filters"
-            description="Live coverage is not implemented yet — the ingestion layer only produces pre-match snapshots at this stage."
+            title="Fixtures could not be loaded"
+            description="The data provider returned an error. Retry once the service responds."
+            icon={<TriangleAlert className="h-5 w-5" />}
+            action={
+              <button
+                type="button"
+                onClick={() => void matches.refetch()}
+                className="rounded border border-border px-3 py-1.5 text-xs hover:border-border-strong focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                Retry
+              </button>
+            }
+          />
+        ) : sorted.length === 0 ? (
+          <EmptyState
+            title={tab === "Live" ? "Live coverage is not implemented" : "No fixtures match these filters"}
+            description={
+              tab === "Live"
+                ? "The ingestion layer only produces pre-match snapshots at this stage, so live fixtures are never populated."
+                : "Adjust the date, competition or model filters to widen the selection."
+            }
+            icon={<SearchX className="h-5 w-5" />}
+            action={
+              <button
+                type="button"
+                onClick={reset}
+                className="rounded border border-border px-3 py-1.5 text-xs hover:border-border-strong focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                Reset filters
+              </button>
+            }
           />
         ) : (
-          <TableShell>
-            <THead>
-              <TH>Time</TH>
-              <TH>Competition</TH>
-              <TH>Fixture</TH>
-              <TH>Status</TH>
-              <TH>Model</TH>
-              <TH>Odds</TH>
-              <TH align="right">Markets</TH>
-              <TH>Data quality</TH>
-              <TH align="right">Actions</TH>
-            </THead>
-            <tbody>
-              {rows.map((f) => (
-                <TRow key={f.id}>
-                  <TD>
-                    <Numeric>{timeOf(f.kickoff)}</Numeric>
-                  </TD>
-                  <TD>
-                    <CompetitionBadge code={f.competition.shortCode} name={f.competition.name} />
-                  </TD>
-                  <TD>
-                    <div className="flex items-center gap-2">
-                      <TeamBadge code={f.home.code} name={f.home.name} />
-                      <span className="text-subtle-foreground">vs</span>
-                      <TeamBadge code={f.away.code} name={f.away.name} />
-                    </div>
-                    <div className="text-caption text-subtle-foreground">{f.round}</div>
-                  </TD>
-                  <TD className="text-xs capitalize text-muted-foreground">{f.status}</TD>
-                  <TD>
-                    <ModelBadge status={f.modelStatus} />
-                  </TD>
-                  <TD>
-                    <DataStateBadge state={f.oddsState} />
-                  </TD>
-                  <TD align="right">
-                    <Numeric>{pct(f.marketCoverage, 0)}</Numeric>
-                    <div className="text-caption text-subtle-foreground">
-                      {f.bookmakerCount} books
-                    </div>
-                  </TD>
-                  <TD>
-                    <DataStateBadge state={f.dataQuality} />
-                  </TD>
-                  <TD align="right">
-                    <Link
-                      to="/matches/$fixtureId"
-                      params={{ fixtureId: f.id }}
-                      className="rounded border border-border px-2 py-1 text-caption text-muted-foreground hover:border-primary/40 hover:text-primary"
-                    >
-                      Match center
-                    </Link>
-                  </TD>
-                </TRow>
+          <>
+            <div className="hidden lg:block">
+              <TableShell>
+                <THead>
+                  <SortableTH
+                    active={sort.key === "kickoff"}
+                    direction={sort.direction}
+                    onClick={() => toggle("kickoff")}
+                  >
+                    Time
+                  </SortableTH>
+                  <SortableTH
+                    active={sort.key === "competition"}
+                    direction={sort.direction}
+                    onClick={() => toggle("competition")}
+                  >
+                    Competition
+                  </SortableTH>
+                  <SortableTH
+                    active={sort.key === "fixture"}
+                    direction={sort.direction}
+                    onClick={() => toggle("fixture")}
+                  >
+                    Fixture
+                  </SortableTH>
+                  <TH>Status</TH>
+                  <TH>Model</TH>
+                  <TH>Odds</TH>
+                  <SortableTH
+                    align="right"
+                    active={sort.key === "coverage"}
+                    direction={sort.direction}
+                    onClick={() => toggle("coverage")}
+                  >
+                    Markets
+                  </SortableTH>
+                  <TH>
+                    <MetricLabel term="freshness">Data quality</MetricLabel>
+                  </TH>
+                  <TH align="right">Actions</TH>
+                </THead>
+                <tbody>
+                  {sorted.map((f) => (
+                    <TRow key={f.id} onClick={() => open(f.id)}>
+                      <TD>
+                        <Numeric>{timeOf(f.kickoff)}</Numeric>
+                        <div className="text-caption text-subtle-foreground">UTC</div>
+                      </TD>
+                      <TD>
+                        <CompetitionBadge code={f.competition.shortCode} name={f.competition.name} />
+                      </TD>
+                      <TD>
+                        <div className="flex items-center gap-2">
+                          <TeamBadge code={f.home.code} name={f.home.name} />
+                          <span className="text-subtle-foreground">vs</span>
+                          <TeamBadge code={f.away.code} name={f.away.name} />
+                        </div>
+                        <div className="text-caption text-subtle-foreground">{f.round}</div>
+                      </TD>
+                      <TD className="text-xs capitalize text-muted-foreground">{f.status}</TD>
+                      <TD>
+                        <ModelBadge status={f.modelStatus} />
+                      </TD>
+                      <TD>
+                        <DataStateBadge state={f.oddsState} />
+                      </TD>
+                      <TD align="right">
+                        <Numeric>{pct(f.marketCoverage, 0)}</Numeric>
+                        <div className="text-caption text-subtle-foreground">
+                          {f.bookmakerCount} books
+                        </div>
+                      </TD>
+                      <TD>
+                        <FreshnessBadge freshness={freshnessFromState(f.dataQuality)} />
+                      </TD>
+                      <TD align="right">
+                        <span className="inline-flex items-center gap-0.5 text-caption text-primary">
+                          Match centre
+                          <ChevronRight aria-hidden className="h-3 w-3" />
+                        </span>
+                      </TD>
+                    </TRow>
+                  ))}
+                </tbody>
+              </TableShell>
+            </div>
+
+            <div className="lg:hidden">
+              {sorted.map((f) => (
+                <CardRow
+                  key={f.id}
+                  onClick={() => open(f.id)}
+                  title={`${f.home.name} vs ${f.away.name}`}
+                  subtitle={`${timeOf(f.kickoff)} UTC · ${f.competition.name} · ${f.round}`}
+                  badges={
+                    <>
+                      <ModelBadge status={f.modelStatus} />
+                      <FreshnessBadge freshness={freshnessFromState(f.dataQuality)} />
+                    </>
+                  }
+                  fields={[
+                    { label: "Status", value: f.status },
+                    { label: "Odds", value: <DataStateBadge state={f.oddsState} /> },
+                    { label: "Markets", value: pct(f.marketCoverage, 0) },
+                    { label: "Books", value: f.bookmakerCount },
+                  ]}
+                />
               ))}
-            </tbody>
-          </TableShell>
+            </div>
+          </>
         )}
       </Panel>
     </div>
