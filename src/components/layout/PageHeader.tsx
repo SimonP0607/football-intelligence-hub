@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, type LinkProps } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
 export function PageHeader({
@@ -8,7 +8,7 @@ export function PageHeader({
   actions,
   className,
 }: {
-  breadcrumb?: Array<{ label: string; to?: string }>;
+  breadcrumb?: Array<{ label: string; to?: LinkProps["to"] }>;
   title: string;
   description?: string;
   actions?: React.ReactNode;
