@@ -14,7 +14,7 @@ import {
   ProbabilityBar,
 } from "@/components/primitives/Indicators";
 import { queries } from "@/lib/api/resources";
-import { dateTimeOf, pct, signedPct } from "@/lib/format";
+import { dateTimeOf, pct, signedPct, timeOf } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { PickCandidate, PickStatus } from "@/types/domain";
 
@@ -148,7 +148,7 @@ function PicksPage() {
                       <div className="truncate text-sm">{p.fixtureLabel}</div>
                       <div className="text-caption text-subtle-foreground">{p.competition}</div>
                     </TD>
-                    <TD className="text-xs text-muted-foreground">{p.marketLabel}</TD>
+                    <TD className="whitespace-nowrap text-xs text-muted-foreground">{p.marketLabel}</TD>
                     <TD className="text-sm">{p.selection}</TD>
                     <TD align="right">
                       <Numeric>{pct(p.modelProbability)}</Numeric>
@@ -186,7 +186,7 @@ function PicksPage() {
                     </TD>
                     <TD align="right">
                       <Numeric className="text-xs" muted>
-                        {dateTimeOf(p.createdAt)}
+                        {timeOf(p.createdAt)}
                       </Numeric>
                     </TD>
                   </TRow>

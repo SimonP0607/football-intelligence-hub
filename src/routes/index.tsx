@@ -102,12 +102,12 @@ function Overview() {
           {matches.isLoading ? (
             <TableSkeleton rows={6} cols={6} />
           ) : (
-            <TableShell>
+            <TableShell className="min-w-0">
               <THead>
                 <TH>Time</TH>
                 <TH>League</TH>
                 <TH>Fixture</TH>
-                <TH align="right">Market coverage</TH>
+                <TH align="right">Coverage</TH>
                 <TH>Model</TH>
                 <TH>Odds</TH>
               </THead>
