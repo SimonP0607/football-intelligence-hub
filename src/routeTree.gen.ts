@@ -15,10 +15,12 @@ import { Route as BacktestingRouteImport } from './routes/backtesting'
 import { Route as CompetitionsRouteImport } from './routes/competitions'
 import { Route as OddsRouteImport } from './routes/odds'
 import { Route as PerformanceRouteImport } from './routes/performance'
+import { Route as PicksRouteImport } from './routes/picks'
 import { Route as RankingsRouteImport } from './routes/rankings'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TeamsRouteImport } from './routes/teams'
 import { Route as MatchesIndexRouteImport } from './routes/matches.index'
+import { Route as MatchesFixtureIdRouteImport } from './routes/matches.$fixtureId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -50,6 +52,11 @@ const PerformanceRoute = PerformanceRouteImport.update({
   path: '/performance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PicksRoute = PicksRouteImport.update({
+  id: '/picks',
+  path: '/picks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RankingsRoute = RankingsRouteImport.update({
   id: '/rankings',
   path: '/rankings',
@@ -70,6 +77,11 @@ const MatchesIndexRoute = MatchesIndexRouteImport.update({
   path: '/matches/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MatchesFixtureIdRoute = MatchesFixtureIdRouteImport.update({
+  id: '/matches/$fixtureId',
+  path: '/matches/$fixtureId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -78,9 +90,11 @@ export interface FileRoutesByFullPath {
   '/competitions': typeof CompetitionsRoute
   '/odds': typeof OddsRoute
   '/performance': typeof PerformanceRoute
+  '/picks': typeof PicksRoute
   '/rankings': typeof RankingsRoute
   '/settings': typeof SettingsRoute
   '/teams': typeof TeamsRoute
+  '/matches/$fixtureId': typeof MatchesFixtureIdRoute
   '/matches/': typeof MatchesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -90,9 +104,11 @@ export interface FileRoutesByTo {
   '/competitions': typeof CompetitionsRoute
   '/odds': typeof OddsRoute
   '/performance': typeof PerformanceRoute
+  '/picks': typeof PicksRoute
   '/rankings': typeof RankingsRoute
   '/settings': typeof SettingsRoute
   '/teams': typeof TeamsRoute
+  '/matches/$fixtureId': typeof MatchesFixtureIdRoute
   '/matches': typeof MatchesIndexRoute
 }
 export interface FileRoutesById {
@@ -103,9 +119,11 @@ export interface FileRoutesById {
   '/competitions': typeof CompetitionsRoute
   '/odds': typeof OddsRoute
   '/performance': typeof PerformanceRoute
+  '/picks': typeof PicksRoute
   '/rankings': typeof RankingsRoute
   '/settings': typeof SettingsRoute
   '/teams': typeof TeamsRoute
+  '/matches/$fixtureId': typeof MatchesFixtureIdRoute
   '/matches/': typeof MatchesIndexRoute
 }
 export interface FileRouteTypes {
@@ -117,9 +135,11 @@ export interface FileRouteTypes {
     | '/competitions'
     | '/odds'
     | '/performance'
+    | '/picks'
     | '/rankings'
     | '/settings'
     | '/teams'
+    | '/matches/$fixtureId'
     | '/matches/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -129,9 +149,11 @@ export interface FileRouteTypes {
     | '/competitions'
     | '/odds'
     | '/performance'
+    | '/picks'
     | '/rankings'
     | '/settings'
     | '/teams'
+    | '/matches/$fixtureId'
     | '/matches'
   id:
     | '__root__'
@@ -141,9 +163,11 @@ export interface FileRouteTypes {
     | '/competitions'
     | '/odds'
     | '/performance'
+    | '/picks'
     | '/rankings'
     | '/settings'
     | '/teams'
+    | '/matches/$fixtureId'
     | '/matches/'
   fileRoutesById: FileRoutesById
 }
@@ -154,9 +178,11 @@ export interface RootRouteChildren {
   CompetitionsRoute: typeof CompetitionsRoute
   OddsRoute: typeof OddsRoute
   PerformanceRoute: typeof PerformanceRoute
+  PicksRoute: typeof PicksRoute
   RankingsRoute: typeof RankingsRoute
   SettingsRoute: typeof SettingsRoute
   TeamsRoute: typeof TeamsRoute
+  MatchesFixtureIdRoute: typeof MatchesFixtureIdRoute
   MatchesIndexRoute: typeof MatchesIndexRoute
 }
 
@@ -204,6 +230,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PerformanceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/picks': {
+      id: '/picks'
+      path: '/picks'
+      fullPath: '/picks'
+      preLoaderRoute: typeof PicksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rankings': {
       id: '/rankings'
       path: '/rankings'
@@ -232,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MatchesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/matches/$fixtureId': {
+      id: '/matches/$fixtureId'
+      path: '/matches/$fixtureId'
+      fullPath: '/matches/$fixtureId'
+      preLoaderRoute: typeof MatchesFixtureIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -242,9 +282,11 @@ const rootRouteChildren: RootRouteChildren = {
   CompetitionsRoute: CompetitionsRoute,
   OddsRoute: OddsRoute,
   PerformanceRoute: PerformanceRoute,
+  PicksRoute: PicksRoute,
   RankingsRoute: RankingsRoute,
   SettingsRoute: SettingsRoute,
   TeamsRoute: TeamsRoute,
+  MatchesFixtureIdRoute: MatchesFixtureIdRoute,
   MatchesIndexRoute: MatchesIndexRoute,
 }
 export const routeTree = rootRouteImport
