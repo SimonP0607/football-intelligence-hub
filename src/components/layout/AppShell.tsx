@@ -1,9 +1,15 @@
-import { useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Menu, Search, Settings2, X, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { navGroups } from "./nav";
 import { StatusBadge } from "@/components/primitives/StatusBadge";
+import { DataModeBadge } from "@/components/system/DataMode";
+import {
+  CommandPalette,
+  destinationFor,
+  searchEntities,
+} from "@/components/system/CommandPalette";
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -68,47 +74,147 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
+function GlobalSearch({ onOpenPalette }: { onOpenPalette: () => void }) {
+  const navigate = useNavigate();
+  const [term, setTerm] = useState("");
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const hits = useMemo(() => searchEntities(term, 6), [term]);
+
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (box.current && !box.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  return (
+    <div ref={box} className="relative hidden min-w-0 flex-1 md:block md:max-w-md">
+      <label className="relative flex items-center">
+        <span className="sr-only">Search fixtures, teams and models</span>
+        <Search aria-hidden className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-subtle-foreground" />
+        <input
+          type="search"
+          value={term}
+          onChange={(e) => {
+            setTerm(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setOpen(false);
+            if (e.key === "Enter" && hits[0]) {
+              const hit = hits[0];
+              setOpen(false);
+              setTerm("");
+              if (hit.fixtureId && destinationFor(hit) === "/matches/$fixtureId") {
+                void navigate({ to: "/matches/$fixtureId", params: { fixtureId: hit.fixtureId } });
+              } else {
+                void navigate({ to: destinationFor(hit) });
+              }
+            }
+          }}
+          placeholder="Search fixtures, teams, models…"
+          className="h-8 w-full rounded-md border border-border bg-card pl-8 pr-16 text-sm placeholder:text-subtle-foreground focus:border-border-strong focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        />
+        <button
+          type="button"
+          onClick={onOpenPalette}
+          aria-label="Open command palette"
+          className="numeric absolute right-1.5 rounded border border-border px-1 py-0.5 text-caption text-subtle-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          ⌘K
+        </button>
+      </label>
+
+      {open && term.trim() ? (
+        <div className="absolute left-0 right-0 top-10 z-40 overflow-hidden rounded-md border border-border bg-card shadow-lg">
+          {hits.length === 0 ? (
+            <p className="px-3 py-3 text-xs text-subtle-foreground">
+              No match in the indexed demo dataset.
+            </p>
+          ) : (
+            <ul>
+              {hits.map((h) => (
+                <li key={h.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      setTerm("");
+                      if (h.fixtureId && destinationFor(h) === "/matches/$fixtureId") {
+                        void navigate({
+                          to: "/matches/$fixtureId",
+                          params: { fixtureId: h.fixtureId },
+                        });
+                      } else {
+                        void navigate({ to: destinationFor(h) });
+                      }
+                    }}
+                    className="flex w-full items-baseline justify-between gap-3 px-3 py-2 text-left text-xs hover:bg-elevated focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <span className="truncate">{h.label}</span>
+                    <span className="shrink-0 text-caption text-subtle-foreground">
+                      {h.sublabel}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function Topbar({
+  onOpenMenu,
+  onOpenPalette,
+}: {
+  onOpenMenu: () => void;
+  onOpenPalette: () => void;
+}) {
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur">
       <button
         type="button"
         onClick={onOpenMenu}
         aria-label="Open navigation"
-        className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground lg:hidden"
+        className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring lg:hidden"
       >
         <Menu className="h-4 w-4" />
       </button>
 
-      <label className="relative hidden min-w-0 flex-1 items-center md:flex md:max-w-md">
-        <Search className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-subtle-foreground" />
-        <input
-          type="search"
-          placeholder="Search fixtures, teams, models…"
-          className="h-8 w-full rounded-md border border-border bg-card pl-8 pr-16 text-sm placeholder:text-subtle-foreground focus:border-border-strong focus:outline-none focus:ring-1 focus:ring-ring"
-        />
-        <span className="numeric pointer-events-none absolute right-2 text-caption text-subtle-foreground">
-          ⌘K
-        </span>
-      </label>
+      <GlobalSearch onOpenPalette={onOpenPalette} />
 
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
+        <DataModeBadge />
         <StatusBadge tone="warning">Research mode</StatusBadge>
-        <span className="hidden items-center gap-1.5 text-caption text-muted-foreground sm:flex">
-          <span className="h-1.5 w-1.5 rounded-full bg-positive" />
+        <span className="hidden items-center gap-1.5 text-caption text-muted-foreground lg:flex">
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-positive" />
           Last sync <span className="numeric">12:03 UTC</span>
         </span>
         <button
           type="button"
+          onClick={onOpenPalette}
+          aria-label="Search"
+          className="rounded-md p-1.5 text-muted-foreground hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:hidden"
+        >
+          <Search className="h-4 w-4" />
+        </button>
+        <Link
+          to="/settings"
           aria-label="Settings"
-          className="rounded-md p-1.5 text-muted-foreground hover:bg-elevated hover:text-foreground"
+          className="rounded-md p-1.5 text-muted-foreground hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
           <Settings2 className="h-4 w-4" />
-        </button>
+        </Link>
         <button
           type="button"
           aria-label="Account"
-          className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-elevated text-muted-foreground"
+          className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-elevated text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
           <User className="h-3.5 w-3.5" />
         </button>
@@ -119,8 +225,10 @@ function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   return (
     <div className="min-h-screen bg-background">
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <aside className="fixed inset-y-0 left-0 hidden w-60 border-r border-sidebar-border bg-sidebar lg:block">
         <SidebarContent />
       </aside>
@@ -147,7 +255,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ) : null}
 
       <div className="lg:pl-60">
-        <Topbar onOpenMenu={() => setOpen(true)} />
+        <Topbar onOpenMenu={() => setOpen(true)} onOpenPalette={() => setPaletteOpen(true)} />
         <main className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6">{children}</main>
       </div>
     </div>
