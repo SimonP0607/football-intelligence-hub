@@ -17,6 +17,9 @@ import {
   OddsCell,
   TeamBadge,
 } from "@/components/primitives/Indicators";
+import { DataModeBadge } from "@/components/system/DataMode";
+import { FreshnessBadge, freshnessFromState } from "@/components/system/Freshness";
+import { MetricLabel } from "@/components/system/InfoTip";
 import { queries } from "@/lib/api/resources";
 import { EMPTY, dateTimeOf, int, pct, timeOf } from "@/lib/format";
 import { models as modelList } from "@/mock/data";
@@ -55,32 +58,31 @@ function Overview() {
         title="Overview"
         description="Operations view for today. Every figure below comes from demo data until the engine is connected."
         actions={
-          <>
+          <div className="flex flex-wrap items-center gap-2">
             <StatusBadge tone="brand">Shadow mode</StatusBadge>
-            <StatusBadge tone="warning">Demo data</StatusBadge>
-          </>
+            <DataModeBadge />
+          </div>
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          label="Today"
-          value="04 Sep 2026"
-          hint="All timestamps in UTC"
-        />
-        <MetricCard
-          label="Monitored fixtures"
-          value={int(matches.data?.length ?? null)}
-          hint={`${upcoming.length} upcoming · 6 competitions`}
-        />
-        <MetricCard label="Last synchronisation" value="12:03" hint="Fixtures + odds snapshot" />
-        <MetricCard
-          label="System state"
-          value="Degraded"
-          tone="warning"
-          hint="1 failed job · 3 stale captures"
-        />
-      </div>
+      <dl className="surface-panel grid grid-cols-2 divide-border sm:grid-cols-4 sm:divide-x">
+        {[
+          { label: "Today", value: "04 Sep 2026", hint: "All timestamps in UTC" },
+          {
+            label: "Monitored fixtures",
+            value: int(matches.data?.length ?? null),
+            hint: `${upcoming.length} upcoming · 6 competitions`,
+          },
+          { label: "Last synchronisation", value: "12:03 UTC", hint: "Fixtures + odds snapshot" },
+          { label: "System state", value: "Degraded", hint: "1 failed job · 3 stale captures" },
+        ].map((cell) => (
+          <div key={cell.label} className="px-4 py-3">
+            <dt className="text-label text-subtle-foreground">{cell.label}</dt>
+            <dd className="numeric mt-1 text-base text-foreground">{cell.value}</dd>
+            <dd className="mt-0.5 text-caption text-muted-foreground">{cell.hint}</dd>
+          </div>
+        ))}
+      </dl>
 
       <WarningBanner>
         The platform is running in research / shadow mode. No pick has been published, and no
@@ -163,7 +165,7 @@ function Overview() {
                     <Numeric className="text-xs" muted>
                       {h.value}
                     </Numeric>
-                    <DataStateBadge state={h.state} />
+                    <FreshnessBadge freshness={freshnessFromState(h.state)} detail={h.detail} />
                   </div>
                 </li>
               ))}
@@ -206,16 +208,24 @@ function Overview() {
               <TH>Fixture</TH>
               <TH>Market</TH>
               <TH>Selection</TH>
-              <TH align="right" title="Probability produced by the model">
-                Model prob
+              <TH align="right">
+                <MetricLabel term="modelProbability">Model prob</MetricLabel>
               </TH>
-              <TH align="right" title="Overround-removed consensus probability">
-                Market prob
+              <TH align="right">
+                <MetricLabel term="marketProbability">Market prob</MetricLabel>
               </TH>
-              <TH align="right">Fair odds</TH>
-              <TH align="right">Best odds</TH>
-              <TH align="right">Edge</TH>
-              <TH align="right">EV</TH>
+              <TH align="right">
+                <MetricLabel term="fairOdds">Fair odds</MetricLabel>
+              </TH>
+              <TH align="right">
+                <MetricLabel term="bestOdds">Best odds</MetricLabel>
+              </TH>
+              <TH align="right">
+                <MetricLabel term="edge">Edge</MetricLabel>
+              </TH>
+              <TH align="right">
+                <MetricLabel term="ev">EV</MetricLabel>
+              </TH>
               <TH>Status</TH>
             </THead>
             <tbody>

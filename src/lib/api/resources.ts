@@ -1,78 +1,80 @@
 /**
- * Resource layer. Each function maps 1:1 to a future FastAPI endpoint.
- * Swap the demo adapter for `httpGet` once the backend is reachable.
+ * Resource layer. Thin, typed facade over the active DataProvider so that
+ * pages never import the mock modules directly.
  */
-import { demo, USING_DEMO_DATA, httpGet } from "./client";
-import * as mock from "@/mock/data";
-import type {
-  CalibrationBin,
-  DataQualityStatus,
-  Fixture,
-  MarketProbability,
-  ModelSummary,
-  OddsSnapshot,
-  PerformanceSummary,
-  PickCandidate,
-  Prediction,
-  SystemHealth,
-  TeamRatings,
-} from "@/types/domain";
+import { dataProvider } from "./provider";
+import type { BacktestConfig } from "@/types/domain";
 
-export const api = {
-  health: (): Promise<SystemHealth[]> =>
-    USING_DEMO_DATA ? demo(mock.systemHealth) : httpGet<SystemHealth[]>("/health"),
-
-  matches: (): Promise<Fixture[]> =>
-    USING_DEMO_DATA ? demo(mock.fixtures) : httpGet<Fixture[]>("/matches"),
-
-  match: (id: string): Promise<Fixture | undefined> =>
-    USING_DEMO_DATA
-      ? demo(mock.fixtures.find((f) => f.id === id))
-      : httpGet<Fixture>(`/matches/${id}`),
-
-  matchMarkets: (id: string): Promise<MarketProbability[]> =>
-    USING_DEMO_DATA
-      ? demo(mock.marketsForFixture(id))
-      : httpGet<MarketProbability[]>(`/matches/${id}/markets`),
-
-  matchPrediction: (id: string): Promise<Prediction> =>
-    USING_DEMO_DATA
-      ? demo(mock.predictionForFixture(id))
-      : httpGet<Prediction>(`/matches/${id}/prediction`),
-
-  matchOddsSnapshot: (id: string): Promise<OddsSnapshot> =>
-    USING_DEMO_DATA
-      ? demo(mock.oddsSnapshot)
-      : httpGet<OddsSnapshot>(`/matches/${id}/odds-snapshot`),
-
-  matchRatings: (id: string): Promise<{ home: TeamRatings; away: TeamRatings }> =>
-    USING_DEMO_DATA
-      ? demo({ home: mock.teamRatings["home"]!, away: mock.teamRatings["away"]! })
-      : httpGet(`/matches/${id}/ratings`),
-
-  picks: (): Promise<PickCandidate[]> =>
-    USING_DEMO_DATA ? demo(mock.picks) : httpGet<PickCandidate[]>("/picks"),
-
-  models: (): Promise<ModelSummary[]> =>
-    USING_DEMO_DATA ? demo(mock.models) : httpGet<ModelSummary[]>("/models"),
-
-  calibration: (modelId: string): Promise<CalibrationBin[]> =>
-    USING_DEMO_DATA
-      ? demo(mock.calibrationBins)
-      : httpGet<CalibrationBin[]>(`/models/${modelId}/calibration`),
-
-  performance: (): Promise<PerformanceSummary> =>
-    USING_DEMO_DATA ? demo(mock.performance) : httpGet<PerformanceSummary>("/performance"),
-
-  dataQuality: (): Promise<DataQualityStatus[]> =>
-    USING_DEMO_DATA ? demo(mock.dataQuality) : httpGet<DataQualityStatus[]>("/data-quality"),
-};
+export const api = dataProvider;
 
 export const queries = {
-  health: { queryKey: ["health"], queryFn: api.health },
-  matches: { queryKey: ["matches"], queryFn: api.matches },
-  picks: { queryKey: ["picks"], queryFn: api.picks },
-  models: { queryKey: ["models"], queryFn: api.models },
-  performance: { queryKey: ["performance"], queryFn: api.performance },
-  dataQuality: { queryKey: ["data-quality"], queryFn: api.dataQuality },
+  health: { queryKey: ["health"], queryFn: () => api.getHealth() },
+  matches: { queryKey: ["matches"], queryFn: () => api.getMatches() },
+  picks: { queryKey: ["picks"], queryFn: () => api.getPicks() },
+  models: { queryKey: ["models"], queryFn: () => api.getModels() },
+  performance: { queryKey: ["performance"], queryFn: () => api.getPerformance() },
+  performanceCharts: {
+    queryKey: ["performance", "charts"],
+    queryFn: () => api.getPerformanceCharts(),
+  },
+  dataQuality: { queryKey: ["data-quality"], queryFn: () => api.getDataQuality() },
+  coverage: { queryKey: ["data-quality", "coverage"], queryFn: () => api.getCoverage() },
+  issues: { queryKey: ["data-quality", "issues"], queryFn: () => api.getDataIssues() },
+  lineage: { queryKey: ["data-quality", "lineage"], queryFn: () => api.getLineage() },
+  valueScanner: { queryKey: ["odds", "value-scanner"], queryFn: () => api.getValueScanner() },
+  nearClose: { queryKey: ["odds", "near-close"], queryFn: () => api.getNearCloseSnapshots() },
+  analyst: { queryKey: ["analyst"], queryFn: () => api.getAnalystAnswers() },
+} as const;
+
+export const fixtureQueries = {
+  match: (id: string) => ({ queryKey: ["match", id], queryFn: () => api.getMatch(id) }),
+  markets: (id: string) => ({
+    queryKey: ["match", id, "markets"],
+    queryFn: () => api.getMatchMarkets(id),
+  }),
+  prediction: (id: string) => ({
+    queryKey: ["match", id, "prediction"],
+    queryFn: () => api.getMatchPrediction(id),
+  }),
+  oddsSnapshot: (id: string) => ({
+    queryKey: ["match", id, "odds-snapshot"],
+    queryFn: () => api.getMatchOddsSnapshot(id),
+  }),
+  ratings: (id: string) => ({
+    queryKey: ["match", id, "ratings"],
+    queryFn: () => api.getMatchRatings(id),
+  }),
+  timeline: (id: string) => ({
+    queryKey: ["match", id, "timeline"],
+    queryFn: () => api.getMatchTimeline(id),
+  }),
+  modelComparison: (id: string) => ({
+    queryKey: ["match", id, "model-comparison"],
+    queryFn: () => api.getMatchModelComparison(id),
+  }),
+  oddsBoard: (id: string) => ({
+    queryKey: ["match", id, "odds-board"],
+    queryFn: () => api.getOddsBoard(id),
+  }),
+  consensus: (id: string) => ({
+    queryKey: ["match", id, "consensus"],
+    queryFn: () => api.getOddsConsensus(id),
+  }),
+  movement: (id: string) => ({
+    queryKey: ["match", id, "movement"],
+    queryFn: () => api.getLineMovement(id),
+  }),
 };
+
+export const modelQueries = {
+  calibration: (id: string) => ({
+    queryKey: ["models", id, "calibration"],
+    queryFn: () => api.getCalibration(id),
+  }),
+};
+
+export const backtestQuery = (config: BacktestConfig, enabled: boolean) => ({
+  queryKey: ["backtest", config],
+  queryFn: () => api.runBacktest(config),
+  enabled,
+});

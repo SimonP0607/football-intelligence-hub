@@ -15,10 +15,14 @@ import {
   ProvenanceChip,
   TeamBadge,
 } from "@/components/primitives/Indicators";
-import { api } from "@/lib/api/resources";
+import { DataModeBadge } from "@/components/system/DataMode";
+import { MetricLabel } from "@/components/system/InfoTip";
+import { SegmentedTabs } from "@/components/system/Filters";
+import { AuditTimeline, EventTimeline } from "@/components/system/Timelines";
+import { fixtureQueries } from "@/lib/api/resources";
 import { EMPTY, dateTimeOf, num, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { TeamRatings } from "@/types/domain";
+import type { MarketKey, TeamRatings } from "@/types/domain";
 
 export const Route = createFileRoute("/matches/$fixtureId")({
   head: () => ({
@@ -42,30 +46,28 @@ export const Route = createFileRoute("/matches/$fixtureId")({
 const tabs = ["Overview", "Markets", "Models", "Team Data", "Timeline", "Audit"] as const;
 type Tab = (typeof tabs)[number];
 
+const marketTabs = ["All markets", "1X2", "Over/Under 2.5", "BTTS", "Double Chance"] as const;
+type MarketTab = (typeof marketTabs)[number];
+
+const marketKeyOf: Record<Exclude<MarketTab, "All markets">, MarketKey> = {
+  "1X2": "1x2",
+  "Over/Under 2.5": "ou_2_5",
+  BTTS: "btts",
+  "Double Chance": "double_chance",
+};
+
 function MatchCenter() {
   const { fixtureId } = Route.useParams();
   const [tab, setTab] = useState<Tab>("Overview");
 
-  const fixture = useQuery({
-    queryKey: ["match", fixtureId],
-    queryFn: () => api.match(fixtureId),
-  });
-  const markets = useQuery({
-    queryKey: ["match-markets", fixtureId],
-    queryFn: () => api.matchMarkets(fixtureId),
-  });
-  const prediction = useQuery({
-    queryKey: ["match-prediction", fixtureId],
-    queryFn: () => api.matchPrediction(fixtureId),
-  });
-  const snapshot = useQuery({
-    queryKey: ["match-odds", fixtureId],
-    queryFn: () => api.matchOddsSnapshot(fixtureId),
-  });
-  const ratings = useQuery({
-    queryKey: ["match-ratings", fixtureId],
-    queryFn: () => api.matchRatings(fixtureId),
-  });
+  const [marketTab, setMarketTab] = useState<MarketTab>("All markets");
+  const fixture = useQuery(fixtureQueries.match(fixtureId));
+  const timeline = useQuery(fixtureQueries.timeline(fixtureId));
+  const comparison = useQuery(fixtureQueries.modelComparison(fixtureId));
+  const markets = useQuery(fixtureQueries.markets(fixtureId));
+  const prediction = useQuery(fixtureQueries.prediction(fixtureId));
+  const snapshot = useQuery(fixtureQueries.oddsSnapshot(fixtureId));
+  const ratings = useQuery(fixtureQueries.ratings(fixtureId));
 
   if (fixture.isLoading) {
     return (
@@ -104,7 +106,7 @@ function MatchCenter() {
           <>
             <ModelBadge status={f.modelStatus} />
             <DataStateBadge state={f.dataQuality} label={`Data ${f.dataQuality}`} />
-            <StatusBadge tone="warning">Demo data</StatusBadge>
+            <DataModeBadge />
           </>
         }
       />
@@ -207,36 +209,74 @@ function MatchCenter() {
       ) : null}
 
       {tab === "Markets" ? (
-        <Panel
-          title="Market intelligence"
-          subtitle="Edge is only shown where a model probability and an available price both exist."
-          bodyClassName=""
-        >
-          <MarketTable rows={markets.data ?? []} grouped />
-        </Panel>
+        <div className="space-y-4">
+          <SegmentedTabs
+            tabs={marketTabs}
+            value={marketTab}
+            onChange={setMarketTab}
+            label="Market selector"
+          />
+          <Panel
+            title="Market intelligence"
+            subtitle="Edge is only shown where a model probability and an available price both exist."
+            bodyClassName=""
+          >
+            <MarketTable
+              rows={(markets.data ?? []).filter(
+                (m) => marketTab === "All markets" || m.market === marketKeyOf[marketTab],
+              )}
+              grouped={marketTab === "All markets"}
+            />
+          </Panel>
+        </div>
       ) : null}
 
       {tab === "Models" ? (
-        <Panel title="Models applied to this fixture">
-          <div className="space-y-3">
-            {[
-              { name: "Market Baseline", status: "market_baseline" as const, note: "Reference consensus" },
-              { name: "Poisson (bivariate) v0.4.2-rc1", status: "shadow" as const, note: "Producing this fixture's probabilities" },
-              { name: "Elo v0.3.1", status: "shadow" as const, note: "Running in parallel, not used for candidates" },
-              { name: "Dixon-Coles v0.2.0", status: "research" as const, note: "Insufficient sample for this competition" },
-            ].map((m) => (
-              <div
-                key={m.name}
-                className="flex items-center justify-between rounded-md border border-border bg-elevated/40 px-3 py-2.5"
-              >
-                <div>
-                  <div className="text-sm">{m.name}</div>
-                  <div className="text-caption text-subtle-foreground">{m.note}</div>
-                </div>
-                <ModelBadge status={m.status} />
-              </div>
-            ))}
-          </div>
+        <Panel
+          title="Model comparison for this fixture"
+          subtitle="The market baseline is listed first as the reference every model is measured against."
+          bodyClassName=""
+        >
+          {comparison.isLoading ? (
+            <TableSkeleton rows={5} cols={7} />
+          ) : (
+            <TableShell>
+              <THead>
+                <TH>Model</TH>
+                <TH>Version</TH>
+                <TH>Status</TH>
+                <TH align="right">Home</TH>
+                <TH align="right">Draw</TH>
+                <TH align="right">Away</TH>
+                <TH align="right">
+                  <MetricLabel term="brier">Brier</MetricLabel>
+                </TH>
+              </THead>
+              <tbody>
+                {(comparison.data ?? []).map((row) => (
+                  <TRow key={row.modelId}>
+                    <TD className="text-sm">{row.model}</TD>
+                    <TD className="numeric text-xs text-muted-foreground">{row.version}</TD>
+                    <TD>
+                      <ModelBadge status={row.status} />
+                    </TD>
+                    <TD align="right">
+                      <Numeric muted={row.home === null}>{pct(row.home)}</Numeric>
+                    </TD>
+                    <TD align="right">
+                      <Numeric muted={row.draw === null}>{pct(row.draw)}</Numeric>
+                    </TD>
+                    <TD align="right">
+                      <Numeric muted={row.away === null}>{pct(row.away)}</Numeric>
+                    </TD>
+                    <TD align="right">
+                      <Numeric muted>{num(row.brier, 4)}</Numeric>
+                    </TD>
+                  </TRow>
+                ))}
+              </tbody>
+            </TableShell>
+          )}
         </Panel>
       ) : null}
 
@@ -247,39 +287,15 @@ function MatchCenter() {
       ) : null}
 
       {tab === "Timeline" ? (
-        <Panel title="Fixture timeline">
-          <ol className="space-y-3">
-            {[
-              ["11:00 UTC", "Fixture ingested from provider", "healthy"],
-              ["11:45 UTC", "Feature snapshot built", "healthy"],
-              ["12:00 UTC", "Data cutoff applied", "healthy"],
-              ["12:03 UTC", "Odds snapshot captured (14 books)", "healthy"],
-              ["12:04 UTC", "Prediction emitted (shadow)", "healthy"],
-              ["T-12m", "Near-close capture", "unknown"],
-              ["Kickoff", "Live coverage", "unknown"],
-            ].map(([time, label, state]) => (
-              <li key={label} className="flex items-start gap-3">
-                <Numeric className="w-24 shrink-0 text-xs" muted>
-                  {time}
-                </Numeric>
-                <span
-                  className={cn(
-                    "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full",
-                    state === "healthy" ? "bg-primary" : "bg-border-strong",
-                  )}
-                />
-                <span
-                  className={cn(
-                    "text-sm",
-                    state === "healthy" ? "text-foreground" : "text-subtle-foreground",
-                  )}
-                >
-                  {label}
-                  {state !== "healthy" ? " — not available yet" : ""}
-                </span>
-              </li>
-            ))}
-          </ol>
+        <Panel
+          title="Fixture timeline"
+          subtitle="Ingestion, feature build, capture and prediction events for this fixture"
+        >
+          {timeline.isLoading ? (
+            <TableSkeleton rows={6} cols={2} />
+          ) : (
+            <EventTimeline events={timeline.data ?? []} />
+          )}
         </Panel>
       ) : null}
 
@@ -290,30 +306,63 @@ function MatchCenter() {
             subtitle="Every prediction must be reproducible from this chain"
             className="lg:col-span-2"
           >
-            <ol className="space-y-1">
-              {[
-                ["Provider", "API-Football · fixtures + odds"],
-                ["Raw payload", p?.rawPayloadHash ?? EMPTY],
-                ["Normalized fixture", f.id],
-                ["Feature snapshot", p?.featureVersion ?? EMPTY],
-                ["Prediction", p?.id ?? EMPTY],
-                ["Odds snapshot", p?.oddsSnapshotId ?? EMPTY],
-                ["Decision", "shadow — no publication"],
-              ].map(([step, value], i, arr) => (
-                <li key={step} className="flex items-start gap-3">
-                  <div className="flex flex-col items-center">
-                    <span className="numeric flex h-6 w-6 items-center justify-center rounded-full border border-border bg-elevated text-[0.6rem] text-muted-foreground">
-                      {i + 1}
-                    </span>
-                    {i < arr.length - 1 ? <span className="h-6 w-px bg-border" /> : null}
-                  </div>
-                  <div className="pb-2">
-                    <div className="text-title">{step}</div>
-                    <div className="numeric text-xs text-muted-foreground">{value}</div>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            <AuditTimeline
+              steps={[
+                {
+                  id: "provider",
+                  label: "Provider payload",
+                  detail: "API-Football · fixtures + odds endpoints",
+                  at: null,
+                  reference: p?.rawPayloadHash ?? EMPTY,
+                },
+                {
+                  id: "raw",
+                  label: "Raw payload",
+                  detail: "Stored verbatim before normalisation",
+                  at: null,
+                  reference: p?.rawPayloadHash ?? EMPTY,
+                },
+                {
+                  id: "fixture",
+                  label: "Normalized fixture",
+                  detail: `${f.home.name} vs ${f.away.name} · ${f.competition.name}`,
+                  at: null,
+                  reference: f.id ?? EMPTY,
+                  to: { fixtureId: f.id },
+                },
+                {
+                  id: "features",
+                  label: "Feature snapshot",
+                  detail: "Ratings, form and schedule features at cutoff",
+                  at: p?.dataCutoff ?? null,
+                  reference: p?.featureVersion ?? EMPTY,
+                },
+                {
+                  id: "prediction",
+                  label: "Prediction",
+                  detail: `${p?.model ?? EMPTY} ${p?.modelVersion ?? ""}`.trim(),
+                  at: p?.createdAt ?? null,
+                  reference: p?.id ?? EMPTY,
+                },
+                {
+                  id: "odds",
+                  label: "Odds snapshot",
+                  detail: `${snapshot.data?.bookmakerCount ?? EMPTY} bookmakers · overround ${num(
+                    snapshot.data?.overround ?? null,
+                    3,
+                  )}`,
+                  at: snapshot.data?.capturedAt ?? null,
+                  reference: p?.oddsSnapshotId ?? EMPTY,
+                },
+                {
+                  id: "decision",
+                  label: "Decision",
+                  detail: "Shadow mode — candidate recorded, never published",
+                  at: null,
+                  reference: EMPTY,
+                },
+              ]}
+            />
           </Panel>
           <Panel title="Reproducibility record">
             <KeyValue label="Prediction ID" value={p?.id ?? EMPTY} />
