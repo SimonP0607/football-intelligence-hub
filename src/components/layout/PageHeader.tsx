@@ -8,11 +8,11 @@ export function PageHeader({
   actions,
   className,
 }: {
-  breadcrumb?: Array<{ label: string; to?: LinkProps["to"] }>;
+  breadcrumb?: Array<{ label: string; to?: LinkProps["to"] }> | undefined;
   title: string;
-  description?: string;
-  actions?: React.ReactNode;
-  className?: string;
+  description?: string | undefined;
+  actions?: React.ReactNode | undefined;
+  className?: string | undefined;
 }) {
   return (
     <div className={cn("flex flex-wrap items-end justify-between gap-4", className)}>
