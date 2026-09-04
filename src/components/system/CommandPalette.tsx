@@ -30,7 +30,9 @@ export function searchEntities(term: string, limit = 8): SearchHit[] {
     .slice(0, limit);
 }
 
-export function destinationFor(hit: SearchHit): LinkProps["to"] {
+export type Destination = NonNullable<LinkProps["to"]>;
+
+export function destinationFor(hit: SearchHit): Destination {
   if (hit.type === "model") return "/models";
   if (hit.type === "competition") return "/competitions";
   if (hit.fixtureId) return "/matches/$fixtureId";
@@ -65,7 +67,7 @@ export function CommandPalette({
     return [...map.entries()];
   }, [hits]);
 
-  function go(to: LinkProps["to"], fixtureId?: string | null) {
+  function go(to: Destination, fixtureId?: string | null) {
     onOpenChange(false);
     setTerm("");
     if (to === "/matches/$fixtureId" && fixtureId) {
@@ -79,8 +81,6 @@ export function CommandPalette({
     <CommandDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Command palette"
-      description="Search fixtures, teams, competitions, models and modules"
     >
       <CommandInput
         placeholder="Search fixtures, teams, models or jump to a module…"
