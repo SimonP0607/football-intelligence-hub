@@ -388,7 +388,13 @@ function MarketTable({
   );
 }
 
-function RatingsTable({ home, away }: { home?: TeamRatings; away?: TeamRatings }) {
+function RatingsTable({
+  home,
+  away,
+}: {
+  home?: TeamRatings | undefined;
+  away?: TeamRatings | undefined;
+}) {
   if (!home || !away) return <TableSkeleton rows={7} cols={3} />;
   const rows: Array<[string, string, string]> = [
     ["Elo", String(home.elo), String(away.elo)],
