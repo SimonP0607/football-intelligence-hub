@@ -348,7 +348,7 @@ function MatchCenter() {
                   id: "odds",
                   label: "Odds snapshot",
                   detail: `${snapshot.data?.bookmakerCount ?? EMPTY} bookmakers · overround ${num(
-                    snapshot.data?.overround ?? EMPTY,
+                    snapshot.data?.overround ?? null,
                     3,
                   )}`,
                   at: snapshot.data?.capturedAt ?? null,
