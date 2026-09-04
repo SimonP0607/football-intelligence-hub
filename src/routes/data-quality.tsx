@@ -184,7 +184,7 @@ function CoverageTable() {
                   <Numeric muted>{c.fixtures}</Numeric>
                 </TD>
                 <TD align="right">
-                  <Numeric className={c.oddsCoverage < 0.7 ? "text-warning" : undefined}>
+                  <Numeric className={c.oddsCoverage < 0.7 ? "text-warning" : ""}>
                     {pct(c.oddsCoverage, 0)}
                   </Numeric>
                 </TD>
