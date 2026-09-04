@@ -290,7 +290,7 @@ export const fixtureMarkets: Record<string, MarketProbability[]> = {
 };
 
 export function marketsForFixture(id: string): MarketProbability[] {
-  return fixtureMarkets[id] ?? fixtureMarkets["fx-10241"];
+  return fixtureMarkets[id] ?? fixtureMarkets["fx-10241"]!;
 }
 
 export const predictions: Record<string, Prediction> = {
@@ -312,7 +312,7 @@ export const predictions: Record<string, Prediction> = {
 };
 
 export function predictionForFixture(id: string): Prediction {
-  return { ...predictions["fx-10241"], fixtureId: id };
+  return { ...predictions["fx-10241"]!, fixtureId: id };
 }
 
 export const oddsSnapshot: OddsSnapshot = {
