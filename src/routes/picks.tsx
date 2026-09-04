@@ -13,6 +13,9 @@ import {
   OddsCell,
   ProbabilityBar,
 } from "@/components/primitives/Indicators";
+import { DataModeBadge } from "@/components/system/DataMode";
+import { MetricLabel } from "@/components/system/InfoTip";
+import { SegmentedTabs } from "@/components/system/Filters";
 import { queries } from "@/lib/api/resources";
 import { dateTimeOf, pct, signedPct, timeOf } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -37,19 +40,24 @@ export const Route = createFileRoute("/picks")({
   component: PicksPage,
 });
 
-const statuses: Array<PickStatus | "all"> = [
-  "all",
-  "candidate",
-  "shadow",
-  "qualified",
-  "published",
-  "settled",
-  "rejected",
-];
+const tabs = [
+  "All",
+  "Candidate",
+  "Shadow",
+  "Qualified",
+  "Published",
+  "Settled",
+  "Rejected",
+] as const;
+type Tab = (typeof tabs)[number];
+
+const statusOf = (tab: Tab): PickStatus | "all" =>
+  tab === "All" ? "all" : (tab.toLowerCase() as PickStatus);
 
 function PicksPage() {
   const picks = useQuery(queries.picks);
-  const [filter, setFilter] = useState<PickStatus | "all">("all");
+  const [tab, setTab] = useState<Tab>("All");
+  const filter = statusOf(tab);
   const [selected, setSelected] = useState<string | null>(null);
 
   const rows = useMemo(
@@ -67,10 +75,10 @@ function PicksPage() {
         title="Picks Center"
         description="Candidates produced by shadow-mode models. These are research artefacts for evaluation, not recommendations."
         actions={
-          <>
+          <div className="flex flex-wrap items-center gap-2">
             <StatusBadge tone="brand">Shadow mode</StatusBadge>
-            <StatusBadge tone="warning">Demo data</StatusBadge>
-          </>
+            <DataModeBadge />
+          </div>
         }
       />
 
@@ -91,26 +99,21 @@ function PicksPage() {
         />
       </div>
 
-      <div className="surface-panel flex flex-wrap items-center gap-2 px-3 py-2.5">
-        {statuses.map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => setFilter(s)}
-            className={cn(
-              "rounded-md border px-2.5 py-1 text-xs capitalize transition-colors",
-              filter === s
-                ? "border-primary/40 bg-primary/12 text-primary"
-                : "border-border text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {s}
-          </button>
-        ))}
-        <span className="numeric ml-auto text-caption text-subtle-foreground">
-          {rows.length} candidates
-        </span>
-      </div>
+      <SegmentedTabs
+        tabs={tabs}
+        value={tab}
+        onChange={setTab}
+        label="Pick lifecycle state"
+        counts={{
+          All: picks.data?.length ?? 0,
+          Candidate: counts("candidate"),
+          Shadow: counts("shadow"),
+          Qualified: counts("qualified"),
+          Published: counts("published"),
+          Settled: counts("settled"),
+          Rejected: counts("rejected"),
+        }}
+      />
 
       <div className={cn("grid gap-5", detail ? "xl:grid-cols-[1fr_22rem]" : "")}>
         <Panel bodyClassName="">
@@ -127,13 +130,27 @@ function PicksPage() {
                 <TH>Fixture</TH>
                 <TH>Market</TH>
                 <TH>Selection</TH>
-                <TH align="right">Model prob</TH>
-                <TH align="right">Market prob</TH>
-                <TH align="right">Fair odds</TH>
-                <TH align="right">Best odds</TH>
-                <TH align="right">Edge</TH>
-                <TH align="right">EV</TH>
-                <TH>Reliability</TH>
+                <TH align="right">
+                  <MetricLabel term="modelProbability">Model prob</MetricLabel>
+                </TH>
+                <TH align="right">
+                  <MetricLabel term="marketProbability">Market prob</MetricLabel>
+                </TH>
+                <TH align="right">
+                  <MetricLabel term="fairOdds">Fair odds</MetricLabel>
+                </TH>
+                <TH align="right">
+                  <MetricLabel term="bestOdds">Best odds</MetricLabel>
+                </TH>
+                <TH align="right">
+                  <MetricLabel term="edge">Edge</MetricLabel>
+                </TH>
+                <TH align="right">
+                  <MetricLabel term="ev">EV</MetricLabel>
+                </TH>
+                <TH>
+                  <MetricLabel term="reliability">Reliability</MetricLabel>
+                </TH>
                 <TH>Status</TH>
                 <TH align="right">Timestamp</TH>
               </THead>
@@ -229,7 +246,7 @@ function PickDetail({ pick, onClose }: { pick: PickCandidate; onClose: () => voi
         </div>
 
         <div>
-          <div className="text-label text-subtle-foreground">Why this candidate exists</div>
+          <div className="text-label text-subtle-foreground">Decision — why this candidate exists</div>
           <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{pick.rationale}</p>
         </div>
 
@@ -245,8 +262,7 @@ function PickDetail({ pick, onClose }: { pick: PickCandidate; onClose: () => voi
         </div>
 
         <div>
-          <KeyValue label="Model" value={pick.model} />
-          <KeyValue label="Model version" value={pick.modelVersion} />
+          <div className="text-label text-subtle-foreground">Market</div>
           <KeyValue label="Market baseline" value="Consensus, overround removed" />
           <KeyValue label="Fair odds" value={pick.fairOdds.toFixed(2)} />
           <KeyValue
@@ -255,14 +271,26 @@ function PickDetail({ pick, onClose }: { pick: PickCandidate; onClose: () => voi
           />
           <KeyValue label="Edge" value={signedPct(pick.edge, 2)} />
           <KeyValue label="Expected value" value={signedPct(pick.ev, 2)} />
-          <KeyValue label="Reliability" value={pick.reliability} />
-          <KeyValue label="Prediction timestamp" value={dateTimeOf(pick.createdAt)} />
-          <KeyValue label="Data cutoff" value={dateTimeOf(pick.dataCutoff)} />
-          <KeyValue label="Odds snapshot" value={dateTimeOf(pick.oddsCapturedAt)} />
         </div>
 
         <div>
-          <div className="text-label text-subtle-foreground">Risks and caveats</div>
+          <div className="text-label text-subtle-foreground">Model</div>
+          <KeyValue label="Model" value={pick.model} />
+          <KeyValue label="Model version" value={pick.modelVersion} />
+          <KeyValue label="Reliability" value={pick.reliability} />
+          <KeyValue label="Data quality" value={pick.dataQuality} />
+        </div>
+
+        <div>
+          <div className="text-label text-subtle-foreground">Data provenance</div>
+          <KeyValue label="Prediction timestamp" value={dateTimeOf(pick.createdAt)} />
+          <KeyValue label="Data cutoff" value={dateTimeOf(pick.dataCutoff)} />
+          <KeyValue label="Odds snapshot" value={dateTimeOf(pick.oddsCapturedAt)} />
+          <KeyValue label="Pick line value" value="Pending validation" />
+        </div>
+
+        <div className="rounded-md border border-warning/30 bg-warning-soft px-3 py-2.5">
+          <div className="text-label text-warning">Risk block</div>
           <ul className="mt-1.5 space-y-1.5">
             {pick.risks.map((r) => (
               <li key={r} className="flex items-start gap-2 text-xs text-muted-foreground">
