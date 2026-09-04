@@ -17,6 +17,8 @@ import { Panel, KeyValue, MetricCard, WarningBanner, EmptyState } from "@/compon
 import { TableShell, THead, TH, TRow, TD, TableSkeleton } from "@/components/primitives/DataTable";
 import { ModelBadge, StatusBadge } from "@/components/primitives/StatusBadge";
 import { Numeric } from "@/components/primitives/Indicators";
+import { DataModeBadge } from "@/components/system/DataMode";
+import { MetricLabel } from "@/components/system/InfoTip";
 import { modelQueries, queries } from "@/lib/api/resources";
 import { EMPTY, int, num, pct, signedPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -68,7 +70,7 @@ function ModelsPage() {
         breadcrumb={[{ label: "Intelligence" }, { label: "Models" }]}
         title="Model Research Lab"
         description="Every model is scored against the market baseline first. A model that does not beat the baseline is not a model we can use."
-        actions={<StatusBadge tone="warning">Demo data</StatusBadge>}
+        actions={<DataModeBadge />}
       />
 
       <WarningBanner>
@@ -84,12 +86,12 @@ function ModelsPage() {
       </div>
 
       <Panel
-        title="Leaderboard"
-        subtitle="Scored on the same fixture set. Lower Brier and log loss are better."
+        title="Predictive quality"
+        subtitle="Scored on the same fixture set. Lower Brier, log loss and calibration error are better. This section says nothing about profitability."
         bodyClassName=""
       >
         {models.isLoading ? (
-          <TableSkeleton rows={7} cols={11} />
+          <TableSkeleton rows={7} cols={9} />
         ) : (
           <TableShell>
             <THead>
@@ -97,12 +99,16 @@ function ModelsPage() {
               <TH>Version</TH>
               <TH>Status</TH>
               <TH align="right">Sample</TH>
-              <TH align="right">Brier</TH>
-              <TH align="right">Log loss</TH>
-              <TH align="right">Calib. error</TH>
+              <TH align="right">
+                <MetricLabel term="brier">Brier</MetricLabel>
+              </TH>
+              <TH align="right">
+                <MetricLabel term="logLoss">Log loss</MetricLabel>
+              </TH>
+              <TH align="right">
+                <MetricLabel term="calibrationError">Calib. error</MetricLabel>
+              </TH>
               <TH align="right">vs Market</TH>
-              <TH align="right">ROI</TH>
-              <TH align="right">Pick line value</TH>
               <TH align="right">Last evaluation</TH>
             </THead>
             <tbody>
@@ -153,12 +159,6 @@ function ModelsPage() {
                     </span>
                   </TD>
                   <TD align="right">
-                    <Numeric muted>{EMPTY}</Numeric>
-                  </TD>
-                  <TD align="right">
-                    <Numeric muted>{EMPTY}</Numeric>
-                  </TD>
-                  <TD align="right">
                     <Numeric className="text-xs" muted>
                       {m.lastEvaluation ?? EMPTY}
                     </Numeric>
@@ -168,6 +168,53 @@ function ModelsPage() {
             </tbody>
           </TableShell>
         )}
+      </Panel>
+
+      <Panel
+        title="Betting performance"
+        subtitle="Economic evaluation is a separate question from predictive quality and stays locked until a validated, settled sample exists."
+        actions={<StatusBadge tone="neutral">Locked</StatusBadge>}
+        bodyClassName=""
+      >
+        <div aria-disabled className="pointer-events-none opacity-60">
+          <TableShell>
+            <THead>
+              <TH>Model</TH>
+              <TH align="right">Settled picks</TH>
+              <TH align="right">
+                <MetricLabel term="roi">ROI</MetricLabel>
+              </TH>
+              <TH align="right">
+                <MetricLabel term="yieldMetric">Yield</MetricLabel>
+              </TH>
+              <TH align="right">
+                <MetricLabel term="pickLineValue">Pick line value</MetricLabel>
+              </TH>
+              <TH align="right">Hit rate</TH>
+              <TH align="right">
+                <MetricLabel term="drawdown">Max drawdown</MetricLabel>
+              </TH>
+            </THead>
+            <tbody>
+              {list.map((m) => (
+                <TRow key={m.id}>
+                  <TD className="text-sm">{m.name}</TD>
+                  <TD align="right">
+                    <Numeric muted>0</Numeric>
+                  </TD>
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <TD key={i} align="right">
+                      <Numeric muted>{EMPTY}</Numeric>
+                    </TD>
+                  ))}
+                </TRow>
+              ))}
+            </tbody>
+          </TableShell>
+        </div>
+        <p className="border-t border-border px-4 py-2.5 text-caption text-subtle-foreground">
+          Insufficient validated sample — no published or settled pick exists in this dataset.
+        </p>
       </Panel>
 
       {selected ? (
