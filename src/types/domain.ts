@@ -1,0 +1,185 @@
+/**
+ * Domain types for the Football Intelligence Platform.
+ * These mirror the future FastAPI contracts. Never widen to `any`.
+ */
+
+export type DataState = "healthy" | "warning" | "stale" | "failed" | "unknown";
+
+export type FixtureStatus = "upcoming" | "live" | "finished" | "postponed";
+
+export type ModelStatus =
+  | "market_baseline"
+  | "validated"
+  | "shadow"
+  | "research"
+  | "insufficient_data"
+  | "not_trained";
+
+export type PickStatus =
+  | "candidate"
+  | "shadow"
+  | "qualified"
+  | "published"
+  | "settled"
+  | "rejected";
+
+export type MarketKey = "1x2" | "ou_2_5" | "btts" | "double_chance";
+
+export interface Competition {
+  id: string;
+  name: string;
+  country: string;
+  shortCode: string;
+  tier: number;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  shortName: string;
+  code: string;
+  competitionId: string;
+}
+
+export interface TeamRatings {
+  elo: number;
+  attackRating: number;
+  defenseRating: number;
+  homeAwayStrength: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  scheduleStrength: number;
+  form: Array<"W" | "D" | "L">;
+  xg: number | null;
+}
+
+export interface Fixture {
+  id: string;
+  competition: Competition;
+  round: string;
+  kickoff: string;
+  status: FixtureStatus;
+  home: Team;
+  away: Team;
+  modelStatus: ModelStatus;
+  oddsState: DataState;
+  marketCoverage: number;
+  bookmakerCount: number;
+  dataQuality: DataState;
+}
+
+export interface MarketProbability {
+  market: MarketKey;
+  marketLabel: string;
+  selection: string;
+  modelProbability: number | null;
+  marketProbability: number | null;
+  fairOdds: number | null;
+  bestOdds: number | null;
+  bookmaker: string | null;
+  edge: number | null;
+  ev: number | null;
+}
+
+export interface OddsSnapshot {
+  id: string;
+  capturedAt: string;
+  bookmakerCount: number;
+  overround: number;
+  nearClose: boolean;
+}
+
+export interface Prediction {
+  id: string;
+  fixtureId: string;
+  model: string;
+  modelVersion: string;
+  featureVersion: string;
+  calibrator: string;
+  dataCutoff: string;
+  createdAt: string;
+  rawPayloadHash: string;
+  gitSha: string;
+  oddsSnapshotId: string;
+  probabilities: { home: number; draw: number; away: number };
+  marketProbabilities: { home: number; draw: number; away: number };
+}
+
+export interface ModelSummary {
+  id: string;
+  name: string;
+  family: string;
+  version: string;
+  status: ModelStatus;
+  sample: number | null;
+  brier: number | null;
+  logLoss: number | null;
+  calibrationError: number | null;
+  vsMarket: number | null;
+  roi: number | null;
+  lineValue: number | null;
+  lastEvaluation: string | null;
+  description: string;
+}
+
+export interface PickCandidate {
+  id: string;
+  fixtureId: string;
+  fixtureLabel: string;
+  competition: string;
+  kickoff: string;
+  market: MarketKey;
+  marketLabel: string;
+  selection: string;
+  modelProbability: number;
+  marketProbability: number;
+  fairOdds: number;
+  bestOdds: number;
+  bookmaker: string;
+  edge: number;
+  ev: number;
+  reliability: "low" | "medium" | "high" | "unknown";
+  status: PickStatus;
+  createdAt: string;
+  model: string;
+  modelVersion: string;
+  dataCutoff: string;
+  oddsCapturedAt: string;
+  dataQuality: DataState;
+  rationale: string;
+  risks: string[];
+}
+
+export interface PerformanceSummary {
+  pnl: number | null;
+  roi: number | null;
+  yield: number | null;
+  lineValue: number | null;
+  hitRate: number | null;
+  drawdown: number | null;
+  bankroll: number | null;
+  sampleSize: number;
+  publishedPicks: number;
+  note: string;
+}
+
+export interface DataQualityStatus {
+  key: string;
+  label: string;
+  value: string;
+  state: DataState;
+  detail: string;
+}
+
+export interface SystemHealth {
+  component: string;
+  state: DataState;
+  detail: string;
+  value: string;
+}
+
+export interface CalibrationBin {
+  predicted: number;
+  observed: number;
+  sample: number;
+}
