@@ -17,7 +17,7 @@ import { Panel, KeyValue, MetricCard, WarningBanner, EmptyState } from "@/compon
 import { TableShell, THead, TH, TRow, TD, TableSkeleton } from "@/components/primitives/DataTable";
 import { ModelBadge, StatusBadge } from "@/components/primitives/StatusBadge";
 import { Numeric } from "@/components/primitives/Indicators";
-import { api, queries } from "@/lib/api/resources";
+import { modelQueries, queries } from "@/lib/api/resources";
 import { EMPTY, int, num, pct, signedPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { ModelSummary } from "@/types/domain";
@@ -57,10 +57,7 @@ function ModelsPage() {
   const models = useQuery(queries.models);
   const [selectedId, setSelectedId] = useState("poisson");
   const [tab, setTab] = useState<DetailTab>("Overview");
-  const calibration = useQuery({
-    queryKey: ["calibration", selectedId],
-    queryFn: () => api.calibration(selectedId),
-  });
+  const calibration = useQuery(modelQueries.calibration(selectedId));
 
   const list = models.data ?? [];
   const selected = list.find((m) => m.id === selectedId);

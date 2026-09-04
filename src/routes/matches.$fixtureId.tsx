@@ -15,7 +15,7 @@ import {
   ProvenanceChip,
   TeamBadge,
 } from "@/components/primitives/Indicators";
-import { api } from "@/lib/api/resources";
+import { fixtureQueries } from "@/lib/api/resources";
 import { EMPTY, dateTimeOf, num, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { TeamRatings } from "@/types/domain";
@@ -46,26 +46,11 @@ function MatchCenter() {
   const { fixtureId } = Route.useParams();
   const [tab, setTab] = useState<Tab>("Overview");
 
-  const fixture = useQuery({
-    queryKey: ["match", fixtureId],
-    queryFn: () => api.match(fixtureId),
-  });
-  const markets = useQuery({
-    queryKey: ["match-markets", fixtureId],
-    queryFn: () => api.matchMarkets(fixtureId),
-  });
-  const prediction = useQuery({
-    queryKey: ["match-prediction", fixtureId],
-    queryFn: () => api.matchPrediction(fixtureId),
-  });
-  const snapshot = useQuery({
-    queryKey: ["match-odds", fixtureId],
-    queryFn: () => api.matchOddsSnapshot(fixtureId),
-  });
-  const ratings = useQuery({
-    queryKey: ["match-ratings", fixtureId],
-    queryFn: () => api.matchRatings(fixtureId),
-  });
+  const fixture = useQuery(fixtureQueries.match(fixtureId));
+  const markets = useQuery(fixtureQueries.markets(fixtureId));
+  const prediction = useQuery(fixtureQueries.prediction(fixtureId));
+  const snapshot = useQuery(fixtureQueries.oddsSnapshot(fixtureId));
+  const ratings = useQuery(fixtureQueries.ratings(fixtureId));
 
   if (fixture.isLoading) {
     return (
