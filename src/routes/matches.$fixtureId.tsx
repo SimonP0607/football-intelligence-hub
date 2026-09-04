@@ -51,7 +51,7 @@ type MarketTab = (typeof marketTabs)[number];
 
 const marketKeyOf: Record<Exclude<MarketTab, "All markets">, MarketKey> = {
   "1X2": "1x2",
-  "Over/Under 2.5": "over_under_25",
+  "Over/Under 2.5": "ou_2_5",
   BTTS: "btts",
   "Double Chance": "double_chance",
 };
@@ -327,7 +327,7 @@ function MatchCenter() {
                   label: "Normalized fixture",
                   detail: `${f.home.name} vs ${f.away.name} · ${f.competition.name}`,
                   at: null,
-                  reference: f.id,
+                  reference: f.id ?? EMPTY,
                   to: { fixtureId: f.id },
                 },
                 {
@@ -359,7 +359,7 @@ function MatchCenter() {
                   label: "Decision",
                   detail: "Shadow mode — candidate recorded, never published",
                   at: null,
-                  reference: null,
+                  reference: EMPTY,
                 },
               ]}
             />
