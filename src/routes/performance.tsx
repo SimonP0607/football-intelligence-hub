@@ -61,7 +61,6 @@ function PerformancePage() {
         actions={
           <div className="flex items-center gap-2">
             <StatusBadge tone="warning">Insufficient validated sample</StatusBadge>
-            <DataModeBadge />
           </div>
         }
       />

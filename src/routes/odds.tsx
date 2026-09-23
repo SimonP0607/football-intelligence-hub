@@ -69,7 +69,6 @@ function OddsPage() {
         breadcrumb={[{ label: "Operations" }, { label: "Odds Intelligence" }]}
         title="Odds Intelligence"
         description="Raw prices turned into a comparable market view: overround removal, consensus, dispersion and movement between snapshots."
-        actions={<DataModeBadge />}
       />
 
       <WarningBanner>

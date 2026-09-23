@@ -17,6 +17,7 @@ import {
   OddsCell,
   TeamBadge,
 } from "@/components/primitives/Indicators";
+import { cn } from "@/lib/utils";
 import { DataModeBadge } from "@/components/system/DataMode";
 import { FreshnessBadge, freshnessFromState } from "@/components/system/Freshness";
 import { MetricLabel } from "@/components/system/InfoTip";
@@ -60,25 +61,39 @@ function Overview() {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge tone="brand">Shadow mode</StatusBadge>
-            <DataModeBadge />
           </div>
         }
       />
 
       <dl className="surface-panel grid grid-cols-2 divide-border sm:grid-cols-4 sm:divide-x">
         {[
-          { label: "Today", value: "04 Sep 2026", hint: "All timestamps in UTC" },
+          { label: "Today", value: "04 Sep 2026", hint: "All timestamps in UTC", tone: "plain" },
           {
             label: "Monitored fixtures",
             value: int(matches.data?.length ?? null),
             hint: `${upcoming.length} upcoming · 6 competitions`,
           },
           { label: "Last synchronisation", value: "12:03 UTC", hint: "Fixtures + odds snapshot" },
-          { label: "System state", value: "Degraded", hint: "1 failed job · 3 stale captures" },
+          {
+            label: "System state",
+            value: "Degraded",
+            hint: "1 failed job · 3 stale captures",
+            tone: "warning",
+          },
         ].map((cell) => (
           <div key={cell.label} className="px-4 py-3">
             <dt className="text-label text-subtle-foreground">{cell.label}</dt>
-            <dd className="numeric mt-1 text-base text-foreground">{cell.value}</dd>
+            <dd
+              className={cn(
+                "numeric mt-1 flex items-center gap-1.5 text-base",
+                cell.tone === "warning" ? "text-warning" : "text-foreground",
+              )}
+            >
+              {cell.tone === "warning" ? (
+                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-warning" />
+              ) : null}
+              {cell.value}
+            </dd>
             <dd className="mt-0.5 text-caption text-muted-foreground">{cell.hint}</dd>
           </div>
         ))}

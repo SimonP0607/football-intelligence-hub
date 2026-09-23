@@ -131,7 +131,6 @@ function MatchesPage() {
         breadcrumb={[{ label: "Operations" }, { label: "Matches" }]}
         title="Matches"
         description="Every fixture the ingestion layer tracks, with the state of its model output, prices and data quality."
-        actions={<DataModeBadge />}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">

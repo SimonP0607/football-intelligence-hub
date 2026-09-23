@@ -83,7 +83,6 @@ function PicksPage() {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge tone="brand">Shadow mode</StatusBadge>
-            <DataModeBadge />
           </div>
         }
       />

@@ -52,7 +52,6 @@ function DataQualityPage() {
         breadcrumb={[{ label: "System" }, { label: "Data Quality" }]}
         title="Data Quality"
         description="If ingestion is incomplete or stale, every downstream probability is suspect. This module is a gate, not a report."
-        actions={<DataModeBadge />}
       />
 
       {critical.length > 0 ? (

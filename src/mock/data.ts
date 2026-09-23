@@ -694,7 +694,12 @@ export const systemHealth: SystemHealth[] = [
   { component: "PostgreSQL", state: "healthy", detail: "Primary reachable", value: "operational" },
   { component: "Ingestion worker", state: "warning", detail: "1 retried job", value: "degraded" },
   { component: "Last capture", state: "healthy", detail: "Odds snapshot", value: "12:03 UTC" },
-  { component: "Requests today", state: "healthy", detail: "Quota 7,500/day", value: "2,148" },
+  {
+    component: "Requests today",
+    state: "healthy",
+    detail: "Budget 60/day · plan limit 100",
+    value: "12",
+  },
   {
     component: "Data freshness",
     state: "warning",

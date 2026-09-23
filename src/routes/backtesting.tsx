@@ -55,7 +55,6 @@ function BacktestingPage() {
         breadcrumb={[{ label: "Intelligence" }, { label: "Backtesting" }]}
         title="Backtesting"
         description="Replay a model version over historical fixtures using only features available before each kickoff."
-        actions={<DataModeBadge />}
       />
 
       <div className="grid gap-4 xl:grid-cols-[20rem_minmax(0,1fr)]">

@@ -106,7 +106,6 @@ function MatchCenter() {
           <>
             <ModelBadge status={f.modelStatus} />
             <DataStateBadge state={f.dataQuality} label={`Data ${f.dataQuality}`} />
-            <DataModeBadge />
           </>
         }
       />

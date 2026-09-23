@@ -76,7 +76,6 @@ function ModelsPage() {
         breadcrumb={[{ label: "Intelligence" }, { label: "Models" }]}
         title="Model Research Lab"
         description="Every model is scored against the market baseline first. A model that does not beat the baseline is not a model we can use."
-        actions={<DataModeBadge />}
       />
 
       <WarningBanner>

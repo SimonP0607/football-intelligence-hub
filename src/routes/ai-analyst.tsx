@@ -57,7 +57,6 @@ function AnalystPage() {
         breadcrumb={[{ label: "System" }, { label: "AI Analyst" }]}
         title="AI Analyst"
         description="A research workspace over internal tools — not a chatbot. Every answer is composed from structured records and cites what produced it."
-        actions={<DataModeBadge />}
       />
 
       <WarningBanner tone="info">
