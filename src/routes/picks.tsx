@@ -3,7 +3,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { Panel, KeyValue, MetricCard, EmptyState, WarningBanner } from "@/components/primitives/Panel";
+import {
+  Panel,
+  KeyValue,
+  MetricCard,
+  EmptyState,
+  WarningBanner,
+} from "@/components/primitives/Panel";
 import { TableShell, THead, TH, TRow, TD, TableSkeleton } from "@/components/primitives/DataTable";
 import { DataStateBadge, PickStatusBadge, StatusBadge } from "@/components/primitives/StatusBadge";
 import {
@@ -83,20 +89,15 @@ function PicksPage() {
       />
 
       <WarningBanner>
-        No candidate has been published. Publication requires a validated model, a sufficient
-        sample and a near-close price capture — none of which are satisfied yet.
+        No candidate has been published. Publication requires a validated model, a sufficient sample
+        and a near-close price capture — none of which are satisfied yet.
       </WarningBanner>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Candidates" value={String(counts("candidate"))} hint="Awaiting review" />
         <MetricCard label="Shadow" value={String(counts("shadow"))} hint="Tracked, never staked" />
         <MetricCard label="Published" value="0" tone="muted" hint="Blocked by validation gate" />
-        <MetricCard
-          label="Settled"
-          value="0"
-          tone="muted"
-          hint="No result history to report"
-        />
+        <MetricCard label="Settled" value="0" tone="muted" hint="No result history to report" />
       </div>
 
       <SegmentedTabs
@@ -156,16 +157,14 @@ function PicksPage() {
               </THead>
               <tbody>
                 {rows.map((p) => (
-                  <TRow
-                    key={p.id}
-                    onClick={() => setSelected(p.id)}
-                    selected={selected === p.id}
-                  >
+                  <TRow key={p.id} onClick={() => setSelected(p.id)} selected={selected === p.id}>
                     <TD>
                       <div className="truncate text-sm">{p.fixtureLabel}</div>
                       <div className="text-caption text-subtle-foreground">{p.competition}</div>
                     </TD>
-                    <TD className="whitespace-nowrap text-xs text-muted-foreground">{p.marketLabel}</TD>
+                    <TD className="whitespace-nowrap text-xs text-muted-foreground">
+                      {p.marketLabel}
+                    </TD>
                     <TD className="text-sm">{p.selection}</TD>
                     <TD align="right">
                       <Numeric>{pct(p.modelProbability)}</Numeric>
@@ -246,7 +245,9 @@ function PickDetail({ pick, onClose }: { pick: PickCandidate; onClose: () => voi
         </div>
 
         <div>
-          <div className="text-label text-subtle-foreground">Decision — why this candidate exists</div>
+          <div className="text-label text-subtle-foreground">
+            Decision — why this candidate exists
+          </div>
           <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{pick.rationale}</p>
         </div>
 

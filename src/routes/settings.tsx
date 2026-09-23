@@ -5,9 +5,15 @@ export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
       { title: "Settings — Football Intelligence" },
-      { name: "description", content: "Workspace, thresholds, provider configuration and versioning preferences." },
+      {
+        name: "description",
+        content: "Workspace, thresholds, provider configuration and versioning preferences.",
+      },
       { property: "og:title", content: "Settings — Football Intelligence" },
-      { property: "og:description", content: "Workspace, thresholds, provider configuration and versioning preferences." },
+      {
+        property: "og:description",
+        content: "Workspace, thresholds, provider configuration and versioning preferences.",
+      },
     ],
   }),
   component: Page,
@@ -20,7 +26,28 @@ function Page() {
       title="Settings"
       description="Workspace, thresholds, provider configuration and versioning preferences."
       purpose="Settings controls the operational parameters of the research workspace: decision thresholds, snapshot cadence, tracked bookmakers, competition scope and which model versions are allowed to emit candidates."
-      sections={[{ title: "Decision thresholds", description: "Minimum edge, minimum sample and reliability gates for candidates.", state: "planned" }, { title: "Provider configuration", description: "API quota, capture cadence and retry policy.", state: "planned" }, { title: "Tracked markets", description: "Which markets and bookmakers form the consensus.", state: "planned" }, { title: "Model release", description: "Which versions may run in shadow and which may publish.", state: "planned" }]}
+      sections={[
+        {
+          title: "Decision thresholds",
+          description: "Minimum edge, minimum sample and reliability gates for candidates.",
+          state: "planned",
+        },
+        {
+          title: "Provider configuration",
+          description: "API quota, capture cadence and retry policy.",
+          state: "planned",
+        },
+        {
+          title: "Tracked markets",
+          description: "Which markets and bookmakers form the consensus.",
+          state: "planned",
+        },
+        {
+          title: "Model release",
+          description: "Which versions may run in shadow and which may publish.",
+          state: "planned",
+        },
+      ]}
       dataNeeds={["GET /settings", "PATCH /settings", "GET /settings/thresholds"]}
     />
   );

@@ -186,7 +186,9 @@ function AnswerView({ answer }: { answer: AnalystAnswer }) {
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel title="Related fixtures">
           {answer.relatedFixtures.length === 0 ? (
-            <p className="text-xs text-subtle-foreground">No fixture is implicated by this answer.</p>
+            <p className="text-xs text-subtle-foreground">
+              No fixture is implicated by this answer.
+            </p>
           ) : (
             <ul className="space-y-1.5">
               {answer.relatedFixtures.map((f) => (

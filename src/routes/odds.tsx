@@ -13,22 +13,12 @@ import {
   THead,
   TRow,
 } from "@/components/primitives/DataTable";
-import {
-  EVIndicator,
-  EdgeIndicator,
-  Numeric,
-  OddsCell,
-} from "@/components/primitives/Indicators";
+import { EVIndicator, EdgeIndicator, Numeric, OddsCell } from "@/components/primitives/Indicators";
 import { StatusBadge } from "@/components/primitives/StatusBadge";
 import { FreshnessBadge } from "@/components/system/Freshness";
 import { MetricLabel } from "@/components/system/InfoTip";
 import { DataModeBadge } from "@/components/system/DataMode";
-import {
-  FilterBar,
-  NumberFilter,
-  SegmentedTabs,
-  SelectFilter,
-} from "@/components/system/Filters";
+import { FilterBar, NumberFilter, SegmentedTabs, SelectFilter } from "@/components/system/Filters";
 import { ChartContainer, LineMovementChart } from "@/components/analytics/Charts";
 import { fixtureQueries, queries } from "@/lib/api/resources";
 import { fixtures } from "@/mock/data";
@@ -55,7 +45,13 @@ export const Route = createFileRoute("/odds")({
   component: OddsPage,
 });
 
-const tabs = ["Value Scanner", "Odds Explorer", "Line Movement", "Market Consensus", "Near-Close"] as const;
+const tabs = [
+  "Value Scanner",
+  "Odds Explorer",
+  "Line Movement",
+  "Market Consensus",
+  "Near-Close",
+] as const;
 type Tab = (typeof tabs)[number];
 
 function OddsPage() {
@@ -375,7 +371,12 @@ function OddsExplorer({ fixtureId }: { fixtureId: string }) {
 function LineMovement({ fixtureId }: { fixtureId: string }) {
   const movement = useQuery(fixtureQueries.movement(fixtureId));
   const series = movement.data ?? [];
-  if (movement.isLoading) return <Panel><TableSkeleton rows={4} cols={3} /></Panel>;
+  if (movement.isLoading)
+    return (
+      <Panel>
+        <TableSkeleton rows={4} cols={3} />
+      </Panel>
+    );
   return (
     <div className="space-y-4">
       <ChartContainer
@@ -538,9 +539,7 @@ function NearClose() {
                 <TD className="text-xs">{r.selection}</TD>
                 <TD align="right">
                   <Numeric>{fmtOdds(r.snapshotOdds)}</Numeric>
-                  <div className="text-caption text-subtle-foreground">
-                    {timeOf(r.capturedAt)}
-                  </div>
+                  <div className="text-caption text-subtle-foreground">{timeOf(r.capturedAt)}</div>
                 </TD>
                 <TD align="right">
                   <Numeric muted>{fmtOdds(r.latestOdds)}</Numeric>

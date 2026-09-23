@@ -24,9 +24,7 @@ export function searchEntities(term: string, limit = 8): SearchHit[] {
   const q = term.trim().toLowerCase();
   if (!q) return [];
   return searchIndex
-    .filter(
-      (h) => h.label.toLowerCase().includes(q) || h.sublabel.toLowerCase().includes(q),
-    )
+    .filter((h) => h.label.toLowerCase().includes(q) || h.sublabel.toLowerCase().includes(q))
     .slice(0, limit);
 }
 
@@ -78,10 +76,7 @@ export function CommandPalette({
   }
 
   return (
-    <CommandDialog
-      open={open}
-      onOpenChange={onOpenChange}
-    >
+    <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput
         placeholder="Search fixtures, teams, models or jump to a module…"
         value={term}

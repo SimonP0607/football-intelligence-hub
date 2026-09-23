@@ -129,7 +129,15 @@ export function CalibrationChart({ bins }: { bins: CalibrationBin[] }) {
         unit="%"
         {...axis}
       />
-      <YAxis type="number" dataKey="observed" domain={[0, 100]} name="Observed" unit="%" width={46} {...axis} />
+      <YAxis
+        type="number"
+        dataKey="observed"
+        domain={[0, 100]}
+        name="Observed"
+        unit="%"
+        width={46}
+        {...axis}
+      />
       <Tooltip {...tooltipStyle} cursor={{ strokeDasharray: "3 3" }} />
       <ReferenceLine
         segment={[
@@ -205,7 +213,12 @@ export function MonthlyBars({
       <YAxis width={46} {...axis} />
       <Tooltip {...tooltipStyle} />
       <ReferenceLine y={0} stroke="var(--color-border-strong)" />
-      <Bar dataKey={dataKey} fill="var(--color-info)" isAnimationActive={false} radius={[2, 2, 0, 0]} />
+      <Bar
+        dataKey={dataKey}
+        fill="var(--color-info)"
+        isAnimationActive={false}
+        radius={[2, 2, 0, 0]}
+      />
     </BarChart>
   );
 }
@@ -221,7 +234,12 @@ export function ProbabilityBuckets({ bins }: { bins: CalibrationBin[] }) {
       <XAxis dataKey="bucket" {...axis} />
       <YAxis width={46} {...axis} />
       <Tooltip {...tooltipStyle} />
-      <Bar dataKey="sample" fill="var(--color-primary)" isAnimationActive={false} radius={[2, 2, 0, 0]} />
+      <Bar
+        dataKey="sample"
+        fill="var(--color-primary)"
+        isAnimationActive={false}
+        radius={[2, 2, 0, 0]}
+      />
     </BarChart>
   );
 }

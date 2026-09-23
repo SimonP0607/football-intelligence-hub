@@ -8,20 +8,10 @@ export type DataState = "healthy" | "warning" | "stale" | "failed" | "unknown";
 export type FixtureStatus = "upcoming" | "live" | "finished" | "postponed";
 
 export type ModelStatus =
-  | "market_baseline"
-  | "validated"
-  | "shadow"
-  | "research"
-  | "insufficient_data"
-  | "not_trained";
+  "market_baseline" | "validated" | "shadow" | "research" | "insufficient_data" | "not_trained";
 
 export type PickStatus =
-  | "candidate"
-  | "shadow"
-  | "qualified"
-  | "published"
-  | "settled"
-  | "rejected";
+  "candidate" | "shadow" | "qualified" | "published" | "settled" | "rejected";
 
 export type MarketKey = "1x2" | "ou_2_5" | "btts" | "double_chance";
 

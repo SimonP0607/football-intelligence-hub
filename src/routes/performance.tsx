@@ -83,8 +83,18 @@ function PerformancePage() {
           hint="Minimum viable sample not reached"
           tone="warning"
         />
-        <MetricCard label="Bankroll" value={p?.bankroll === null ? EMPTY : num(p?.bankroll, 2)} hint="Not initialised" tone="muted" />
-        <MetricCard label="Reporting mode" value="Shadow" hint="No stake is recorded" tone="muted" />
+        <MetricCard
+          label="Bankroll"
+          value={p?.bankroll === null ? EMPTY : num(p?.bankroll, 2)}
+          hint="Not initialised"
+          tone="muted"
+        />
+        <MetricCard
+          label="Reporting mode"
+          value="Shadow"
+          hint="No stake is recorded"
+          tone="muted"
+        />
       </div>
 
       <Panel

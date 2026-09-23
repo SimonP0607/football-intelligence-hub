@@ -69,7 +69,9 @@ function MatchesPage() {
   const [term, setTerm] = useState("");
   const [oddsOnly, setOddsOnly] = useState(false);
 
-  const all = matches.data ?? [];
+  // `?? []` built a fresh array on every render, so every useMemo below it
+  // re-ran every render and memoised nothing. Memoising the fallback fixes it.
+  const all = useMemo(() => matches.data ?? [], [matches.data]);
   const sameDay = useMemo(() => all.filter((f) => f.kickoff.slice(0, 10) === day), [all, day]);
 
   const counts = useMemo(
@@ -137,7 +139,13 @@ function MatchesPage() {
         <span className="numeric text-caption text-subtle-foreground">{formatDay(day)}</span>
       </div>
 
-      <SegmentedTabs tabs={tabs} value={tab} onChange={setTab} counts={counts} label="Fixture status" />
+      <SegmentedTabs
+        tabs={tabs}
+        value={tab}
+        onChange={setTab}
+        counts={counts}
+        label="Fixture status"
+      />
 
       <FilterBar
         onReset={reset}
@@ -205,7 +213,11 @@ function MatchesPage() {
           />
         ) : sorted.length === 0 ? (
           <EmptyState
-            title={tab === "Live" ? "Live coverage is not implemented" : "No fixtures match these filters"}
+            title={
+              tab === "Live"
+                ? "Live coverage is not implemented"
+                : "No fixtures match these filters"
+            }
             description={
               tab === "Live"
                 ? "The ingestion layer only produces pre-match snapshots at this stage, so live fixtures are never populated."
@@ -272,7 +284,10 @@ function MatchesPage() {
                         <div className="text-caption text-subtle-foreground">UTC</div>
                       </TD>
                       <TD>
-                        <CompetitionBadge code={f.competition.shortCode} name={f.competition.name} />
+                        <CompetitionBadge
+                          code={f.competition.shortCode}
+                          name={f.competition.name}
+                        />
                       </TD>
                       <TD>
                         <div className="flex items-center gap-2">

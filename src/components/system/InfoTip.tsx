@@ -1,10 +1,5 @@
 import { Info } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { glossary, type GlossaryKey } from "@/lib/glossary";
 
@@ -42,13 +37,7 @@ export function InfoTip({
 }
 
 /** Column header variant: keeps the table header typography intact. */
-export function MetricLabel({
-  term,
-  children,
-}: {
-  term: GlossaryKey;
-  children: React.ReactNode;
-}) {
+export function MetricLabel({ term, children }: { term: GlossaryKey; children: React.ReactNode }) {
   return (
     <InfoTip term={term} className="text-label font-semibold text-subtle-foreground">
       {children}

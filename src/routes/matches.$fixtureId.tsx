@@ -124,7 +124,9 @@ function MatchCenter() {
         </div>
         <div className="flex flex-col items-center justify-center px-4">
           <span className="text-label text-subtle-foreground">{f.status}</span>
-          <span className="numeric text-lg">{dateTimeOf(f.kickoff).split(" ").slice(2).join(" ")}</span>
+          <span className="numeric text-lg">
+            {dateTimeOf(f.kickoff).split(" ").slice(2).join(" ")}
+          </span>
         </div>
         <div className="flex items-center justify-end gap-3 text-right">
           <div>
@@ -165,9 +167,21 @@ function MatchCenter() {
             {p ? (
               <ProbabilityComparison
                 outcomes={[
-                  { label: "Home", model: p.probabilities.home, market: p.marketProbabilities.home },
-                  { label: "Draw", model: p.probabilities.draw, market: p.marketProbabilities.draw },
-                  { label: "Away", model: p.probabilities.away, market: p.marketProbabilities.away },
+                  {
+                    label: "Home",
+                    model: p.probabilities.home,
+                    market: p.marketProbabilities.home,
+                  },
+                  {
+                    label: "Draw",
+                    model: p.probabilities.draw,
+                    market: p.marketProbabilities.draw,
+                  },
+                  {
+                    label: "Away",
+                    model: p.probabilities.away,
+                    market: p.marketProbabilities.away,
+                  },
                 ]}
               />
             ) : (
@@ -281,7 +295,10 @@ function MatchCenter() {
       ) : null}
 
       {tab === "Team Data" ? (
-        <Panel title="Team intelligence" subtitle="Rating parameters used by the goal-process model">
+        <Panel
+          title="Team intelligence"
+          subtitle="Rating parameters used by the goal-process model"
+        >
           <RatingsTable home={ratings.data?.home} away={ratings.data?.away} />
         </Panel>
       ) : null}
@@ -408,9 +425,7 @@ function MarketTable({
       <tbody>
         {rows.map((m) => (
           <TRow key={`${m.market}-${m.selection}`}>
-            {grouped ? (
-              <TD className="text-xs text-muted-foreground">{m.marketLabel}</TD>
-            ) : null}
+            {grouped ? <TD className="text-xs text-muted-foreground">{m.marketLabel}</TD> : null}
             <TD className="text-sm">{m.selection}</TD>
             <TD align="right">
               <Numeric>{pct(m.modelProbability)}</Numeric>

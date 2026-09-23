@@ -13,7 +13,13 @@ import {
   YAxis,
 } from "recharts";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { Panel, KeyValue, MetricCard, WarningBanner, EmptyState } from "@/components/primitives/Panel";
+import {
+  Panel,
+  KeyValue,
+  MetricCard,
+  WarningBanner,
+  EmptyState,
+} from "@/components/primitives/Panel";
 import { TableShell, THead, TH, TRow, TD, TableSkeleton } from "@/components/primitives/DataTable";
 import { ModelBadge, StatusBadge } from "@/components/primitives/StatusBadge";
 import { Numeric } from "@/components/primitives/Indicators";
@@ -79,10 +85,19 @@ function ModelsPage() {
       </WarningBanner>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Models tracked" value={String(list.length)} hint="Including the baseline" />
+        <MetricCard
+          label="Models tracked"
+          value={String(list.length)}
+          hint="Including the baseline"
+        />
         <MetricCard label="Validated" value="0" tone="muted" hint="Gate not passed" />
         <MetricCard label="In shadow" value="2" hint="Poisson · Elo" />
-        <MetricCard label="Best vs baseline" value="-0.62%" tone="negative" hint="Poisson, Brier delta" />
+        <MetricCard
+          label="Best vs baseline"
+          value="-0.62%"
+          tone="negative"
+          hint="Poisson, Brier delta"
+        />
       </div>
 
       <Panel
@@ -113,11 +128,7 @@ function ModelsPage() {
             </THead>
             <tbody>
               {list.map((m) => (
-                <TRow
-                  key={m.id}
-                  onClick={() => setSelectedId(m.id)}
-                  selected={m.id === selectedId}
-                >
+                <TRow key={m.id} onClick={() => setSelectedId(m.id)} selected={m.id === selectedId}>
                   <TD>
                     <div className="text-sm">{m.name}</div>
                     <div className="text-caption text-subtle-foreground">{m.family}</div>

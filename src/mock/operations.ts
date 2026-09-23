@@ -212,7 +212,9 @@ export function fixtureTimeline(fixtureId: string): TimelineEvent[] {
     {
       id: "odds-latest",
       label: "Latest odds snapshot",
-      detail: stale ? "Capture older than the freshness threshold." : "14 bookmakers, overround 1.043.",
+      detail: stale
+        ? "Capture older than the freshness threshold."
+        : "14 bookmakers, overround 1.043.",
       at: stale ? `${day}T09:12:00Z` : `${day}T12:03:50Z`,
       state: stale ? "failed" : "done",
     },

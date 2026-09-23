@@ -129,19 +129,57 @@ export function lineMovement(fixtureId: string): LineMovementSeries[] {
   }));
 }
 
-const valueSeed: Array<[string, ValueRow["market"], string, string, number, number, number, number, string, ValueRow["freshness"]]> = [
-  ["fx-10241", "ou_2_5", "Over / Under 2.5", "Over 2.5", 0.548, 0.521, 1.82, 1.95, "Book D", "fresh"],
+const valueSeed: Array<
+  [
+    string,
+    ValueRow["market"],
+    string,
+    string,
+    number,
+    number,
+    number,
+    number,
+    string,
+    ValueRow["freshness"],
+  ]
+> = [
+  [
+    "fx-10241",
+    "ou_2_5",
+    "Over / Under 2.5",
+    "Over 2.5",
+    0.548,
+    0.521,
+    1.82,
+    1.95,
+    "Book D",
+    "fresh",
+  ],
   ["fx-10241", "1x2", "1X2", "Home", 0.372, 0.351, 2.69, 2.92, "Book C", "fresh"],
   ["fx-10242", "btts", "BTTS", "Yes", 0.604, 0.578, 1.66, 1.78, "Book B", "fresh"],
   ["fx-10244", "1x2", "1X2", "Home", 0.481, 0.462, 2.08, 2.2, "Book A", "aging"],
-  ["fx-10246", "ou_2_5", "Over / Under 2.5", "Under 2.5", 0.421, 0.404, 2.38, 2.55, "Book E", "fresh"],
+  [
+    "fx-10246",
+    "ou_2_5",
+    "Over / Under 2.5",
+    "Under 2.5",
+    0.421,
+    0.404,
+    2.38,
+    2.55,
+    "Book E",
+    "fresh",
+  ],
   ["fx-10248", "double_chance", "Double Chance", "1X", 0.688, 0.671, 1.45, 1.5, "Book C", "aging"],
   ["fx-10243", "1x2", "1X2", "Away", 0.243, 0.219, 4.12, 4.6, "Book D", "stale"],
   ["fx-10245", "1x2", "1X2", "Draw", 0.271, 0.259, 3.69, 3.85, "Book F", "stale"],
 ];
 
 export const valueRows: ValueRow[] = valueSeed.map(
-  ([fixtureId, market, marketLabel, selection, modelP, marketP, fair, best, book, freshness], i) => {
+  (
+    [fixtureId, market, marketLabel, selection, modelP, marketP, fair, best, book, freshness],
+    i,
+  ) => {
     const fx = fixtures.find((f) => f.id === fixtureId)!;
     return {
       id: `val-${i + 1}`,

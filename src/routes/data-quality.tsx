@@ -235,7 +235,9 @@ function IssuesTable() {
           setSeverity("all");
           setStatus("open");
         }}
-        meta={<span className="numeric text-caption text-subtle-foreground">{rows.length} issues</span>}
+        meta={
+          <span className="numeric text-caption text-subtle-foreground">{rows.length} issues</span>
+        }
       >
         <SelectFilter
           label="Severity"

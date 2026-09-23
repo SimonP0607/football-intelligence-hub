@@ -63,18 +63,14 @@ export function OddsCell({
       <span className={cn("numeric text-sm", fair && "text-muted-foreground")}>
         {fmtOdds(value)}
       </span>
-      {bookmaker ? (
-        <span className="text-caption text-subtle-foreground">{bookmaker}</span>
-      ) : null}
+      {bookmaker ? <span className="text-caption text-subtle-foreground">{bookmaker}</span> : null}
     </span>
   );
 }
 
 export function LineValueIndicator({ value }: { value: number | null }) {
   if (value === null) {
-    return (
-      <span className="text-caption text-subtle-foreground">Pending validation</span>
-    );
+    return <span className="text-caption text-subtle-foreground">Pending validation</span>;
   }
   return <EdgeIndicator value={value} />;
 }
@@ -125,7 +121,11 @@ export function ProbabilityComparison({
                 <span
                   className={cn(
                     "numeric text-caption",
-                    delta > 0 ? "text-positive" : delta < 0 ? "text-negative" : "text-muted-foreground",
+                    delta > 0
+                      ? "text-positive"
+                      : delta < 0
+                        ? "text-negative"
+                        : "text-muted-foreground",
                   )}
                 >
                   {signedPct(delta, 1)}
@@ -146,7 +146,11 @@ export function ProbabilityComparison({
 }
 
 export function FormStrip({ form }: { form: Array<"W" | "D" | "L"> }) {
-  const tone = { W: "bg-positive-soft text-positive", D: "bg-muted text-muted-foreground", L: "bg-negative-soft text-negative" };
+  const tone = {
+    W: "bg-positive-soft text-positive",
+    D: "bg-muted text-muted-foreground",
+    L: "bg-negative-soft text-negative",
+  };
   return (
     <div className="flex gap-1" aria-label={`Form: ${form.join(" ")}`}>
       {form.map((r, i) => (

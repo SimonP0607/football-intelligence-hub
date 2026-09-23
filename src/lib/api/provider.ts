@@ -92,8 +92,7 @@ export const mockProvider: DataProvider = {
   getMatchMarkets: (id) => demo(mock.marketsForFixture(id)),
   getMatchPrediction: (id) => demo(mock.predictionForFixture(id)),
   getMatchOddsSnapshot: () => demo(mock.oddsSnapshot),
-  getMatchRatings: () =>
-    demo({ home: mock.teamRatings["home"]!, away: mock.teamRatings["away"]! }),
+  getMatchRatings: () => demo({ home: mock.teamRatings["home"]!, away: mock.teamRatings["away"]! }),
   getMatchTimeline: (id) => demo(ops.fixtureTimeline(id)),
   getMatchModelComparison: (id) => demo(research.modelComparison(id)),
 
@@ -130,7 +129,8 @@ export const fastApiProvider: DataProvider = {
   getMatchMarkets: (id) => httpGet<MarketProbability[]>(`/matches/${id}/markets`),
   getMatchPrediction: (id) => httpGet<Prediction>(`/matches/${id}/prediction`),
   getMatchOddsSnapshot: (id) => httpGet<OddsSnapshot>(`/matches/${id}/odds-snapshot`),
-  getMatchRatings: (id) => httpGet<{ home: TeamRatings; away: TeamRatings }>(`/matches/${id}/ratings`),
+  getMatchRatings: (id) =>
+    httpGet<{ home: TeamRatings; away: TeamRatings }>(`/matches/${id}/ratings`),
   getMatchTimeline: (id) => httpGet<TimelineEvent[]>(`/matches/${id}/timeline`),
   getMatchModelComparison: (id) => httpGet<ModelComparisonRow[]>(`/matches/${id}/models`),
 
@@ -139,26 +139,30 @@ export const fastApiProvider: DataProvider = {
   getCalibration: (modelId) => httpGet<CalibrationBin[]>(`/models/${modelId}/calibration`),
 
   getOddsBoard: (fixtureId) => httpGet<BookmakerPrice[]>(`/odds/board?fixture_id=${fixtureId}`),
-  getOddsConsensus: (fixtureId) => httpGet<ConsensusRow[]>(`/odds/consensus?fixture_id=${fixtureId}`),
-  getLineMovement: (fixtureId) => httpGet<LineMovementSeries[]>(`/odds/movement?fixture_id=${fixtureId}`),
+  getOddsConsensus: (fixtureId) =>
+    httpGet<ConsensusRow[]>(`/odds/consensus?fixture_id=${fixtureId}`),
+  getLineMovement: (fixtureId) =>
+    httpGet<LineMovementSeries[]>(`/odds/movement?fixture_id=${fixtureId}`),
   getValueScanner: () => httpGet<ValueRow[]>("/odds/value-scanner"),
   getNearCloseSnapshots: () => httpGet<NearCloseRow[]>("/odds/near-close"),
 
   getPerformance: () => httpGet<PerformanceSummary>("/performance"),
   getPerformanceCharts: () => httpGet<PerformanceCharts>("/performance/series"),
   runBacktest: (config) =>
-    httpGet<BacktestResult>(`/backtests?${new URLSearchParams({
-      model_id: config.modelId,
-      model_version: config.modelVersion,
-      competition_id: config.competitionId,
-      season: config.season,
-      market: config.market,
-      date_from: config.from,
-      date_to: config.to,
-      odds_source: config.oddsSource,
-      stake_strategy: config.stakeStrategy,
-      minimum_edge: String(config.minimumEdge),
-    }).toString()}`),
+    httpGet<BacktestResult>(
+      `/backtests?${new URLSearchParams({
+        model_id: config.modelId,
+        model_version: config.modelVersion,
+        competition_id: config.competitionId,
+        season: config.season,
+        market: config.market,
+        date_from: config.from,
+        date_to: config.to,
+        odds_source: config.oddsSource,
+        stake_strategy: config.stakeStrategy,
+        minimum_edge: String(config.minimumEdge),
+      }).toString()}`,
+    ),
 
   getDataQuality: () => httpGet<DataQualityStatus[]>("/data-quality"),
   getCoverage: () => httpGet<CoverageRow[]>("/data-quality/coverage"),

@@ -65,7 +65,9 @@ export function AuditTimeline({ steps }: { steps: AuditStep[] }) {
             <span className="numeric flex h-6 w-6 shrink-0 items-center justify-center rounded border border-border bg-elevated text-[0.6rem] text-muted-foreground">
               {i + 1}
             </span>
-            {i < steps.length - 1 ? <span aria-hidden className="my-1 w-px flex-1 bg-border" /> : null}
+            {i < steps.length - 1 ? (
+              <span aria-hidden className="my-1 w-px flex-1 bg-border" />
+            ) : null}
           </div>
           <div className="min-w-0 flex-1 rounded-md border border-border bg-elevated/40 px-3 py-2">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -102,7 +104,10 @@ export function LineageChain({ nodes }: { nodes: LineageNode[] }) {
   return (
     <ol className="grid gap-2 lg:grid-cols-5">
       {nodes.map((n, i) => (
-        <li key={n.id} className="relative rounded-md border border-border bg-elevated/40 px-3 py-2.5">
+        <li
+          key={n.id}
+          className="relative rounded-md border border-border bg-elevated/40 px-3 py-2.5"
+        >
           <div className="flex items-start justify-between gap-2">
             <span className="text-sm">{n.label}</span>
             <DataStateBadge state={n.state} />

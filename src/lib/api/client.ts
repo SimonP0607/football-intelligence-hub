@@ -12,12 +12,7 @@ export const API_BASE_URL: string =
 export const USING_DEMO_DATA = API_BASE_URL === "";
 
 export type ApiResource =
-  | "/health"
-  | "/matches"
-  | "/picks"
-  | "/models"
-  | "/performance"
-  | "/data-quality";
+  "/health" | "/matches" | "/picks" | "/models" | "/performance" | "/data-quality";
 
 export class ApiError extends Error {
   constructor(

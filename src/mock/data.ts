@@ -695,7 +695,12 @@ export const systemHealth: SystemHealth[] = [
   { component: "Ingestion worker", state: "warning", detail: "1 retried job", value: "degraded" },
   { component: "Last capture", state: "healthy", detail: "Odds snapshot", value: "12:03 UTC" },
   { component: "Requests today", state: "healthy", detail: "Quota 7,500/day", value: "2,148" },
-  { component: "Data freshness", state: "warning", detail: "2 competitions stale", value: "18 min" },
+  {
+    component: "Data freshness",
+    state: "warning",
+    detail: "2 competitions stale",
+    value: "18 min",
+  },
 ];
 
 export const dataQuality: DataQualityStatus[] = [
@@ -741,7 +746,13 @@ export const dataQuality: DataQualityStatus[] = [
     state: "stale",
     detail: "Older than the 20 min threshold",
   },
-  { key: "failed", label: "Failed jobs", value: "1", state: "failed", detail: "Ligue 1 odds sweep" },
+  {
+    key: "failed",
+    label: "Failed jobs",
+    value: "1",
+    state: "failed",
+    detail: "Ligue 1 odds sweep",
+  },
   {
     key: "provider",
     label: "Provider errors",

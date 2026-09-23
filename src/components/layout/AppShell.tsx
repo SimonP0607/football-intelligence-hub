@@ -5,11 +5,7 @@ import { cn } from "@/lib/utils";
 import { navGroups } from "./nav";
 import { StatusBadge } from "@/components/primitives/StatusBadge";
 import { DataModeBadge } from "@/components/system/DataMode";
-import {
-  CommandPalette,
-  destinationFor,
-  searchEntities,
-} from "@/components/system/CommandPalette";
+import { CommandPalette, destinationFor, searchEntities } from "@/components/system/CommandPalette";
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -93,7 +89,10 @@ function GlobalSearch({ onOpenPalette }: { onOpenPalette: () => void }) {
     <div ref={box} className="relative hidden min-w-0 flex-1 md:block md:max-w-md">
       <label className="relative flex items-center">
         <span className="sr-only">Search fixtures, teams and models</span>
-        <Search aria-hidden className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-subtle-foreground" />
+        <Search
+          aria-hidden
+          className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-subtle-foreground"
+        />
         <input
           type="search"
           value={term}

@@ -18,13 +18,11 @@ export function FilterBar({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "surface-panel flex flex-wrap items-end gap-2 px-3 py-2.5",
-        className,
-      )}
-    >
-      <SlidersHorizontal aria-hidden className="mb-1.5 hidden h-3.5 w-3.5 text-subtle-foreground sm:block" />
+    <div className={cn("surface-panel flex flex-wrap items-end gap-2 px-3 py-2.5", className)}>
+      <SlidersHorizontal
+        aria-hidden
+        className="mb-1.5 hidden h-3.5 w-3.5 text-subtle-foreground sm:block"
+      />
       {children}
       <div className="ml-auto flex items-center gap-3 pb-0.5">
         {meta}

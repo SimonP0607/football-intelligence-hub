@@ -173,10 +173,30 @@ function BacktestingPage() {
                   value={num(r.calibrationError, 4)}
                   hint="Mean absolute gap"
                 />
-                <MetricCard label="ROI" value={EMPTY} hint="Economic evaluation unavailable" tone="muted" />
-                <MetricCard label="Yield" value={EMPTY} hint="Economic evaluation unavailable" tone="muted" />
-                <MetricCard label="Max drawdown" value={EMPTY} hint="Requires staked results" tone="muted" />
-                <MetricCard label="Pick line value" value={EMPTY} hint="Requires validated near-close capture" tone="muted" />
+                <MetricCard
+                  label="ROI"
+                  value={EMPTY}
+                  hint="Economic evaluation unavailable"
+                  tone="muted"
+                />
+                <MetricCard
+                  label="Yield"
+                  value={EMPTY}
+                  hint="Economic evaluation unavailable"
+                  tone="muted"
+                />
+                <MetricCard
+                  label="Max drawdown"
+                  value={EMPTY}
+                  hint="Requires staked results"
+                  tone="muted"
+                />
+                <MetricCard
+                  label="Pick line value"
+                  value={EMPTY}
+                  hint="Requires validated near-close capture"
+                  tone="muted"
+                />
               </div>
 
               <div className="grid gap-4 xl:grid-cols-2">
