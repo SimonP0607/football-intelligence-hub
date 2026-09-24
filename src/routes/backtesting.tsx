@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { DATA_MODE } from "@/lib/api/mode";
+import { DemoRegion } from "@/components/system/DataSources";
+import { NotYetLive } from "@/live/MarketLive";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Play } from "lucide-react";
@@ -7,7 +10,6 @@ import { MetricCard, Panel, WarningBanner } from "@/components/primitives/Panel"
 import { TableShell, THead, TH, TRow, TD, TableSkeleton } from "@/components/primitives/DataTable";
 import { Numeric } from "@/components/primitives/Indicators";
 import { StatusBadge } from "@/components/primitives/StatusBadge";
-import { DataModeBadge } from "@/components/system/DataMode";
 import { MetricLabel } from "@/components/system/InfoTip";
 import { SelectFilter, NumberFilter } from "@/components/system/Filters";
 import {
@@ -37,8 +39,25 @@ export const Route = createFileRoute("/backtesting")({
       },
     ],
   }),
-  component: BacktestingPage,
+  component: RouteComponent,
 });
+
+function RouteComponent() {
+  if (DATA_MODE === "live") {
+    return (
+      <NotYetLive
+        title="Backtesting"
+        breadcrumb="Research"
+        reason="No backtest has been run against stored data yet. The walk-forward engine (phase 14) writes to analytics.backtest_runs; this page will read those runs, not run anything in the browser."
+      />
+    );
+  }
+  return (
+    <DemoRegion>
+      <BacktestingPage />
+    </DemoRegion>
+  );
+}
 
 function BacktestingPage() {
   const [draft, setDraft] = useState<BacktestConfig>(defaultBacktestConfig);

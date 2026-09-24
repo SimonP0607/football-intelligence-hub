@@ -6,11 +6,13 @@ import { EmptyState, MetricCard, Panel, WarningBanner } from "@/components/primi
 import { TableShell, THead, TH, TRow, TD, TableSkeleton } from "@/components/primitives/DataTable";
 import { DataStateBadge, StatusBadge } from "@/components/primitives/StatusBadge";
 import { Numeric } from "@/components/primitives/Indicators";
-import { DataModeBadge } from "@/components/system/DataMode";
 import { FreshnessBadge } from "@/components/system/Freshness";
 import { LineageChain, SeverityBadge } from "@/components/system/Timelines";
 import { FilterBar, SegmentedTabs, SelectFilter } from "@/components/system/Filters";
 import { queries } from "@/lib/api/resources";
+import { DATA_MODE } from "@/lib/api/mode";
+import { DemoRegion } from "@/components/system/DataSources";
+import { DataQualityLive } from "@/live/DataQualityLive";
 import { dateTimeOf, pct } from "@/lib/format";
 
 export const Route = createFileRoute("/data-quality")({
@@ -29,8 +31,19 @@ export const Route = createFileRoute("/data-quality")({
       },
     ],
   }),
-  component: DataQualityPage,
+  component: DataQualityRoute,
 });
+
+function DataQualityRoute() {
+  if (DATA_MODE === "mock") {
+    return (
+      <DemoRegion>
+        <DataQualityPage />
+      </DemoRegion>
+    );
+  }
+  return <DataQualityLive />;
+}
 
 const tabs = ["Overview", "Coverage", "Issues", "Lineage"] as const;
 type Tab = (typeof tabs)[number];

@@ -18,10 +18,12 @@ import {
   TeamBadge,
 } from "@/components/primitives/Indicators";
 import { cn } from "@/lib/utils";
-import { DataModeBadge } from "@/components/system/DataMode";
 import { FreshnessBadge, freshnessFromState } from "@/components/system/Freshness";
 import { MetricLabel } from "@/components/system/InfoTip";
 import { queries } from "@/lib/api/resources";
+import { DATA_MODE } from "@/lib/api/mode";
+import { DemoRegion } from "@/components/system/DataSources";
+import { OverviewLive } from "@/live/OverviewLive";
 import { EMPTY, dateTimeOf, int, pct, timeOf } from "@/lib/format";
 import { models as modelList } from "@/mock/data";
 
@@ -41,10 +43,21 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  component: Overview,
+  component: OverviewRoute,
 });
 
-function Overview() {
+function OverviewRoute() {
+  if (DATA_MODE === "mock") {
+    return (
+      <DemoRegion>
+        <OverviewDemo />
+      </DemoRegion>
+    );
+  }
+  return <OverviewLive />;
+}
+
+function OverviewDemo() {
   const matches = useQuery(queries.matches);
   const picks = useQuery(queries.picks);
   const health = useQuery(queries.health);

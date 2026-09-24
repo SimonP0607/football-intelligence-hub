@@ -1,4 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { DATA_MODE } from "@/lib/api/mode";
+import { DemoRegion } from "@/components/system/DataSources";
+import { PerformanceLive } from "@/live/MarketLive";
 import { useQuery } from "@tanstack/react-query";
 import { Lock } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -6,7 +9,6 @@ import { MetricCard, Panel, WarningBanner } from "@/components/primitives/Panel"
 import { TableShell, THead, TH, TRow, TD } from "@/components/primitives/DataTable";
 import { Numeric } from "@/components/primitives/Indicators";
 import { StatusBadge } from "@/components/primitives/StatusBadge";
-import { DataModeBadge } from "@/components/system/DataMode";
 import { InfoTip } from "@/components/system/InfoTip";
 import {
   ChartContainer,
@@ -34,8 +36,19 @@ export const Route = createFileRoute("/performance")({
       },
     ],
   }),
-  component: PerformancePage,
+  component: RouteComponent,
 });
+
+function RouteComponent() {
+  if (DATA_MODE === "mock") {
+    return (
+      <DemoRegion>
+        <PerformancePage />
+      </DemoRegion>
+    );
+  }
+  return <PerformanceLive />;
+}
 
 const metrics: Array<{ key: string; label: string; term: GlossaryKey }> = [
   { key: "pnl", label: "P&L", term: "roi" },

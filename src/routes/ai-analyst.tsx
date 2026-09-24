@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { DATA_MODE } from "@/lib/api/mode";
+import { DemoRegion } from "@/components/system/DataSources";
+import { NotYetLive } from "@/live/MarketLive";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Sparkles } from "lucide-react";
@@ -6,7 +9,6 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState, KeyValue, Panel, WarningBanner } from "@/components/primitives/Panel";
 import { StatusBadge } from "@/components/primitives/StatusBadge";
 import { ProvenanceChip } from "@/components/primitives/Indicators";
-import { DataModeBadge } from "@/components/system/DataMode";
 import { queries } from "@/lib/api/resources";
 import { dateTimeOf } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -28,8 +30,25 @@ export const Route = createFileRoute("/ai-analyst")({
       },
     ],
   }),
-  component: AnalystPage,
+  component: RouteComponent,
 });
+
+function RouteComponent() {
+  if (DATA_MODE === "live") {
+    return (
+      <NotYetLive
+        title="AI Analyst"
+        breadcrumb="Research"
+        reason="The analyst answers only through API tools that return provenance for every figure. No language model is connected in this environment, so it has nothing to say rather than something invented."
+      />
+    );
+  }
+  return (
+    <DemoRegion>
+      <AnalystPage />
+    </DemoRegion>
+  );
+}
 
 function AnalystPage() {
   const answers = useQuery(queries.analyst);

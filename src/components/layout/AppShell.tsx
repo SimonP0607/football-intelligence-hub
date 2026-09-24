@@ -3,8 +3,12 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Menu, Search, Settings2, X, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { navGroups } from "./nav";
+import { useQuery } from "@tanstack/react-query";
 import { StatusBadge } from "@/components/primitives/StatusBadge";
-import { DataModeBadge } from "@/components/system/DataMode";
+import { DataSourcesProvider, PageDataModeBadge } from "@/components/system/DataSources";
+import { DATA_MODE, LIVE_ENABLED } from "@/lib/api/mode";
+import { live } from "@/lib/api/v1/queries";
+import { timeOf } from "@/lib/format";
 import { CommandPalette, destinationFor, searchEntities } from "@/components/system/CommandPalette";
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
@@ -62,7 +66,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="border-t border-sidebar-border px-4 py-3">
         <div className="text-caption text-subtle-foreground">Environment</div>
         <div className="mt-1 flex items-center justify-between">
-          <span className="numeric text-xs">local / demo</span>
+          <span className="numeric text-xs">local / {DATA_MODE}</span>
           <StatusBadge tone="brand">Shadow</StatusBadge>
         </div>
       </div>
@@ -168,6 +172,40 @@ function GlobalSearch({ onOpenPalette }: { onOpenPalette: () => void }) {
   );
 }
 
+/**
+ * The newest payload the system has stored. Shell chrome, not page content:
+ * it deliberately uses a plain query so it does not mark every page as live.
+ */
+function LastSync() {
+  const q = useQuery(live.overview);
+  const at = q.data?.data.freshness.last_payload_at ?? null;
+  const worker = q.data?.data.worker.alive;
+  const tone = q.isError
+    ? "bg-negative"
+    : worker === false
+      ? "bg-negative"
+      : at
+        ? "bg-positive"
+        : "bg-subtle-foreground";
+  const label = q.isError
+    ? "API unreachable"
+    : at
+      ? `Last payload ${timeOf(at)} UTC`
+      : q.isLoading
+        ? "Checking…"
+        : "No payload yet";
+  return (
+    <span
+      className="hidden items-center gap-1.5 text-caption text-muted-foreground lg:flex"
+      title={worker === false ? "The worker is not running: no capture will happen." : undefined}
+    >
+      <span aria-hidden className={cn("h-1.5 w-1.5 rounded-full", tone)} />
+      <span className="numeric">{label}</span>
+      {worker === false ? <span className="text-negative">· worker down</span> : null}
+    </span>
+  );
+}
+
 function Topbar({
   onOpenMenu,
   onOpenPalette,
@@ -189,14 +227,11 @@ function Topbar({
       <GlobalSearch onOpenPalette={onOpenPalette} />
 
       <div className="ml-auto flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
-        <DataModeBadge />
+        <PageDataModeBadge />
         <span className="hidden sm:inline-flex">
           <StatusBadge tone="warning">Research mode</StatusBadge>
         </span>
-        <span className="hidden items-center gap-1.5 text-caption text-muted-foreground lg:flex">
-          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-positive" />
-          Last sync <span className="numeric">12:03 UTC</span>
-        </span>
+        {LIVE_ENABLED ? <LastSync /> : null}
         <button
           type="button"
           onClick={onOpenPalette}
@@ -228,37 +263,39 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   return (
-    <div className="min-h-screen bg-background">
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
-      <aside className="fixed inset-y-0 left-0 hidden w-60 border-r border-sidebar-border bg-sidebar lg:block">
-        <SidebarContent />
-      </aside>
+    <DataSourcesProvider>
+      <div className="min-h-screen bg-background">
+        <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+        <aside className="fixed inset-y-0 left-0 hidden w-60 border-r border-sidebar-border bg-sidebar lg:block">
+          <SidebarContent />
+        </aside>
 
-      {open ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="absolute inset-0 bg-background/80"
-            onClick={() => setOpen(false)}
-            aria-hidden
-          />
-          <div className="absolute inset-y-0 left-0 w-64 border-r border-sidebar-border bg-sidebar">
-            <button
-              type="button"
-              aria-label="Close navigation"
+        {open ? (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div
+              className="absolute inset-0 bg-background/80"
               onClick={() => setOpen(false)}
-              className="absolute right-2 top-3 rounded-md p-1.5 text-muted-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <SidebarContent onNavigate={() => setOpen(false)} />
+              aria-hidden
+            />
+            <div className="absolute inset-y-0 left-0 w-64 border-r border-sidebar-border bg-sidebar">
+              <button
+                type="button"
+                aria-label="Close navigation"
+                onClick={() => setOpen(false)}
+                className="absolute right-2 top-3 rounded-md p-1.5 text-muted-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <SidebarContent onNavigate={() => setOpen(false)} />
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      <div className="lg:pl-60">
-        <Topbar onOpenMenu={() => setOpen(true)} onOpenPalette={() => setPaletteOpen(true)} />
-        <main className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6">{children}</main>
+        <div className="lg:pl-60">
+          <Topbar onOpenMenu={() => setOpen(true)} onOpenPalette={() => setPaletteOpen(true)} />
+          <main className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </DataSourcesProvider>
   );
 }

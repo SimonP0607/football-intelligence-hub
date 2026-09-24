@@ -1,0 +1,530 @@
+/**
+ * Contracts of the FastAPI product API (/api/v1), mirrored by hand from the
+ * Pydantic models in football-intelligence-v2 (src/fbi/api/contracts).
+ *
+ * Decimal fields arrive as strings ("2.050") so that no precision is lost in
+ * transit; parse them only where they are displayed.
+ */
+
+export type Dec = string;
+export type Iso = string;
+
+export type DataStatus = "ok" | "empty" | "insufficient_data" | "not_available";
+
+export interface Meta {
+  generated_at: Iso;
+  api_version: "v1";
+  count: number | null;
+  total: number | null;
+  limit: number | null;
+  offset: number | null;
+  data_as_of: Iso | null;
+}
+
+export interface Envelope<T> {
+  status: DataStatus;
+  data: T;
+  reason: string | null;
+  meta: Meta;
+}
+
+export interface Section<T> {
+  status: DataStatus;
+  data: T;
+  reason: string | null;
+}
+
+export type StatusGroup = "scheduled" | "live" | "finished" | "cancelled" | "postponed";
+
+export interface TeamRef {
+  id: number;
+  name: string;
+  provider_team_id: number;
+}
+
+export interface CompetitionRef {
+  id: number;
+  name: string;
+  country: string | null;
+  provider_league_id: number;
+  season: number;
+  competition_type: string;
+  is_tracked: boolean;
+}
+
+export interface VenueRef {
+  id: number;
+  name: string;
+  city: string | null;
+}
+
+export interface Score {
+  home: number;
+  away: number;
+  ht_home: number | null;
+  ht_away: number | null;
+  et_home: number | null;
+  et_away: number | null;
+  pen_home: number | null;
+  pen_away: number | null;
+  outcome_1x2: "Home" | "Draw" | "Away";
+  total_goals: number;
+  btts: boolean;
+  source_payload_hash: string | null;
+  source_fetched_at: Iso | null;
+}
+
+export interface Lineage {
+  provider: string;
+  provider_fixture_id: number;
+  first_seen_at: Iso;
+  updated_at: Iso;
+  recorded: boolean;
+  source_payload_hash: string | null;
+  source_fetched_at: Iso | null;
+  source_endpoint: string | null;
+  source_params: Record<string, string> | null;
+  source_run_id: number | null;
+  source_job_type: string | null;
+  note: string | null;
+}
+
+export interface RunSummary {
+  id: number;
+  job_type: string;
+  job_name: string;
+  status: "running" | "completed" | "partial" | "failed" | "aborted";
+  started_at: Iso;
+  finished_at: Iso | null;
+  duration_ms: number | null;
+  api_calls: number;
+  payloads_stored: number;
+  rows_written: number;
+  rows_updated: number;
+  errors: number;
+  last_error: string | null;
+  notes: string | null;
+}
+
+export interface OddsSummary {
+  snapshots: number;
+  bookmakers: number;
+  markets: number;
+  first_captured_at: Iso | null;
+  last_captured_at: Iso | null;
+  near_close_snapshots: number;
+}
+
+export interface MatchSummary {
+  id: number;
+  provider_fixture_id: number;
+  kickoff_at: Iso;
+  status_short: string;
+  status_group: StatusGroup;
+  round: string | null;
+  competition: CompetitionRef;
+  home: TeamRef;
+  away: TeamRef;
+  score: Score | null;
+  odds: OddsSummary;
+  predictions: number;
+  awaiting_result: boolean;
+}
+
+export interface MarketQuote {
+  bookmaker_id: number;
+  bookmaker: string;
+  market_key: string;
+  selection: string;
+  line: Dec;
+  odds_decimal: Dec;
+  /** 1/odds. Raw: the bookmaker margin is still in it. */
+  implied_probability: Dec;
+  captured_at: Iso;
+  minutes_to_ko: number;
+  source: "prematch" | "live";
+  payload_hash: string;
+}
+
+export interface PredictionRow {
+  model: string;
+  model_version: string;
+  market_key: string;
+  selection: string;
+  line: Dec;
+  p_raw: Dec;
+  p_calibrated: Dec;
+  p_lo: Dec;
+  p_hi: Dec;
+  data_cutoff_ts: Iso;
+  feature_set_hash: string;
+  created_at: Iso;
+}
+
+export type TimelineState = "done" | "pending" | "skipped" | "failed";
+
+export interface TimelineEvent {
+  key: string;
+  label: string;
+  detail: string;
+  at: Iso | null;
+  state: TimelineState;
+}
+
+export interface MatchDetail {
+  match: MatchSummary;
+  venue: VenueRef | null;
+  lineage: Lineage;
+  markets: Section<MarketQuote[]>;
+  predictions: Section<PredictionRow[]>;
+  timeline: TimelineEvent[];
+}
+
+export interface SeasonSummary {
+  id: number;
+  season: number;
+  start_date: string | null;
+  end_date: string | null;
+  is_current: boolean;
+  has_odds: boolean;
+  fixtures: number;
+  finished: number;
+  with_results: number;
+}
+
+export interface CompetitionSummary {
+  id: number;
+  provider_league_id: number;
+  name: string;
+  country: string | null;
+  type: string;
+  competition_type: string;
+  tier: number | null;
+  is_tracked: boolean;
+  seasons: number;
+  current_season: number | null;
+  fixtures: number;
+  teams: number;
+}
+
+export interface CompetitionDetail {
+  competition: CompetitionSummary;
+  seasons: SeasonSummary[];
+  teams: TeamRef[];
+}
+
+export interface TeamSummary {
+  id: number;
+  provider_team_id: number;
+  name: string;
+  country: string | null;
+  fixtures: number;
+  results: number;
+}
+
+export interface TeamRecord {
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goals_for: number;
+  goals_against: number;
+}
+
+export interface TeamDetail {
+  team: TeamSummary;
+  venue: VenueRef | null;
+  record: Section<TeamRecord | null>;
+  recent: MatchSummary[];
+  upcoming: MatchSummary[];
+}
+
+export interface OddsPoint {
+  captured_at: Iso;
+  odds_decimal: Dec;
+  minutes_to_ko: number;
+  source: "prematch" | "live";
+  payload_hash: string;
+}
+
+export interface OddsSeries {
+  bookmaker_id: number;
+  bookmaker: string;
+  market_key: string;
+  selection: string;
+  line: Dec;
+  points: OddsPoint[];
+}
+
+export interface NearCloseQuote {
+  bookmaker: string;
+  market_key: string;
+  selection: string;
+  line: Dec;
+  odds_decimal: Dec;
+  captured_at: Iso;
+  minutes_to_ko: number;
+  source: "prematch" | "live";
+  is_validated_close: boolean;
+  close_validation_method: string | null;
+}
+
+export interface ConsensusQuote {
+  market_key: string;
+  selection: string;
+  line: Dec;
+  as_of: Iso;
+  devig_method: string;
+  p_fair: Dec;
+  n_bookmakers: number;
+  overround: Dec;
+  best_odds: Dec;
+  best_bookmaker: string;
+  dispersion: Dec | null;
+}
+
+export interface FixtureOdds {
+  match: MatchSummary;
+  board: Section<MarketQuote[]>;
+  series: Section<OddsSeries[]>;
+  near_close: Section<NearCloseQuote[]>;
+  consensus: Section<ConsensusQuote[]>;
+}
+
+export type ComponentStatus = "ok" | "degraded" | "down" | "unknown";
+
+export interface ComponentHealth {
+  status: ComponentStatus;
+  detail: string;
+  data: Record<string, unknown>;
+}
+
+export interface SystemHealth {
+  status: ComponentStatus;
+  checked_at: Iso;
+  app: ComponentHealth;
+  database: ComponentHealth;
+  worker: ComponentHealth;
+  football_provider: ComponentHealth;
+}
+
+export interface DatabaseStats {
+  revision: string;
+  competitions_known: number;
+  competitions_tracked: number;
+  teams: number;
+  fixtures: number;
+  fixtures_with_result: number;
+  odds_snapshots: number;
+  near_close_snapshots: number;
+  bookmakers: number;
+  markets_tracked: number;
+  raw_payloads: number;
+  predictions: number;
+  picks: number;
+}
+
+export interface WorkerState {
+  alive: boolean | null;
+  last_beat_at: Iso | null;
+  started_at: Iso | null;
+  ticks: number | null;
+  last_tick_outcome: string | null;
+  scheduler_lag_ms: number | null;
+  code_version: string | null;
+  next_runs: Record<string, string | null>;
+}
+
+export interface ProviderState {
+  provider: string;
+  plan: string;
+  requests_today: number;
+  daily_budget: number;
+  requests_remaining: number;
+  plan_daily_limit: number;
+  last_error: string | null;
+  last_error_at: Iso | null;
+}
+
+export interface FixtureCounts {
+  upcoming_24h: number;
+  upcoming_7d: number;
+  awaiting_result: number;
+  finished: number;
+  finished_with_result: number;
+  next_fixture: MatchSummary | null;
+}
+
+export interface Freshness {
+  last_payload_at: Iso | null;
+  last_fixtures_sync_at: Iso | null;
+  last_results_sync_at: Iso | null;
+  last_odds_capture_at: Iso | null;
+  last_snapshot_at: Iso | null;
+}
+
+export interface Overview {
+  system: SystemHealth;
+  database: DatabaseStats;
+  worker: WorkerState;
+  provider: ProviderState;
+  fixtures: FixtureCounts;
+  freshness: Freshness;
+  recent_runs: RunSummary[];
+  picks: Section<Record<string, number> | null>;
+  performance: Section<null>;
+}
+
+/** The quality snapshot as the API returns it; ratios are null when there is no denominator. */
+export interface QualitySnapshot {
+  computed_at: Iso;
+  horizon_hours: number;
+  fixtures_expected: number;
+  fixtures_with_odds: number;
+  fixtures_with_near_close: number;
+  bookmakers_active: number;
+  bookmakers_seen_24h: number;
+  markets_tracked: number;
+  markets_seen_24h: number;
+  snapshots_24h: number;
+  stale_fixtures: number;
+  failed_jobs_24h: number;
+  partial_jobs_24h: number;
+  provider_errors_24h: number;
+  requests_today: number;
+  ledger_api_calls_today: number;
+  daily_budget: number;
+  requests_remaining_today: number;
+  unattributed_requests_today: number;
+  stale_running_jobs: number;
+  fixtures_awaiting_result: number;
+  fixtures_with_result: number;
+  last_successful_capture: Iso | null;
+  windows_expected_24h: number;
+  windows_captured_24h: number;
+  notes: string[];
+  fixture_odds_coverage: number | null;
+  bookmaker_coverage: number | null;
+  market_coverage: number | null;
+  window_coverage_24h: number | null;
+}
+
+export interface QualityReport {
+  snapshot: QualitySnapshot;
+  explanations: Record<string, string>;
+}
+
+export interface CoverageRow {
+  competition_id: number;
+  competition: string;
+  season: number;
+  fixtures_in_horizon: number;
+  fixtures_with_odds: number;
+  odds_coverage: number | null;
+  bookmakers_seen_24h: number;
+  markets_seen_24h: number;
+  last_capture_at: Iso | null;
+  fixtures_awaiting_result: number;
+}
+
+export interface QualityIssue {
+  key: string;
+  severity: "critical" | "high" | "medium" | "low";
+  title: string;
+  detail: string;
+  count: number;
+  detected_at: Iso;
+}
+
+export interface BacktestMetrics {
+  run_id: number;
+  name: string;
+  protocol: string;
+  test_from: string;
+  test_to: string;
+  n_samples: number;
+  brier: Dec;
+  logloss: Dec;
+  ece: Dec;
+  odds_source: string | null;
+  n_bets: number | null;
+  roi_pct: Dec | null;
+  yield_pct: Dec | null;
+  near_close_lv_mean: Dec | null;
+  code_version: string;
+  finished_at: Iso | null;
+}
+
+export interface ModelVersionSummary {
+  model_id: number;
+  name: string;
+  family: string;
+  description: string;
+  version_id: number;
+  version: string;
+  status: string;
+  train_from: string;
+  train_to: string;
+  n_train: number;
+  code_version: string;
+  created_at: Iso;
+  latest_backtest: BacktestMetrics | null;
+}
+
+export interface MarketBaselineSummary {
+  fixtures_with_consensus: number;
+  methods: string[];
+  last_as_of: Iso | null;
+}
+
+export interface ModelsOverview {
+  market_baseline: Section<MarketBaselineSummary | null>;
+  models: Section<ModelVersionSummary[]>;
+}
+
+export interface PickRow {
+  id: number;
+  fixture_id: number;
+  market_key: string;
+  selection: string;
+  line: Dec;
+  mode: string;
+  status: string;
+  model_version_id: number;
+  decision_rule_version: string;
+  market_odds: Dec;
+  odds_captured_at: Iso;
+  p_calibrated: Dec;
+  p_market_fair: Dec;
+  edge: Dec;
+  price_edge: Dec;
+  ev: Dec;
+  stake_units: Dec;
+  data_cutoff_ts: Iso;
+  created_at: Iso;
+  result_status: string | null;
+  profit_units: Dec | null;
+}
+
+export interface PicksOverview {
+  candidates_by_decision: Record<string, number>;
+  picks_by_mode: Record<string, number>;
+  picks: Section<PickRow[]>;
+}
+
+export interface PerformanceSummary {
+  settled: number;
+  pending: number;
+  staked_units: Dec | null;
+  profit_units: Dec | null;
+  roi_pct: Dec | null;
+  hit_rate: Dec | null;
+  note: string;
+}
+
+export interface SearchHit {
+  type: "fixture" | "team" | "competition";
+  id: number;
+  label: string;
+  sublabel: string;
+}

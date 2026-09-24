@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { DATA_MODE } from "@/lib/api/mode";
+import { DemoRegion } from "@/components/system/DataSources";
+import { ModelsLive } from "@/live/MarketLive";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -23,7 +26,6 @@ import {
 import { TableShell, THead, TH, TRow, TD, TableSkeleton } from "@/components/primitives/DataTable";
 import { ModelBadge, StatusBadge } from "@/components/primitives/StatusBadge";
 import { Numeric } from "@/components/primitives/Indicators";
-import { DataModeBadge } from "@/components/system/DataMode";
 import { MetricLabel } from "@/components/system/InfoTip";
 import { modelQueries, queries } from "@/lib/api/resources";
 import { EMPTY, int, num, pct, signedPct } from "@/lib/format";
@@ -46,8 +48,19 @@ export const Route = createFileRoute("/models")({
       },
     ],
   }),
-  component: ModelsPage,
+  component: RouteComponent,
 });
+
+function RouteComponent() {
+  if (DATA_MODE === "mock") {
+    return (
+      <DemoRegion>
+        <ModelsPage />
+      </DemoRegion>
+    );
+  }
+  return <ModelsLive />;
+}
 
 const detailTabs = [
   "Overview",

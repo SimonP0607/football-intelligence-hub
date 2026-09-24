@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ModulePlaceholder } from "@/components/layout/ModulePlaceholder";
+import { DATA_MODE } from "@/lib/api/mode";
+import { CompetitionsLive } from "@/live/CatalogLive";
 
 export const Route = createFileRoute("/competitions")({
   head: () => ({
@@ -16,8 +18,12 @@ export const Route = createFileRoute("/competitions")({
       },
     ],
   }),
-  component: Page,
+  component: RouteComponent,
 });
+
+function RouteComponent() {
+  return DATA_MODE === "mock" ? <Page /> : <CompetitionsLive />;
+}
 
 function Page() {
   return (

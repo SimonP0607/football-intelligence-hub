@@ -16,7 +16,6 @@ import {
 } from "@/components/primitives/DataTable";
 import { DataStateBadge, ModelBadge } from "@/components/primitives/StatusBadge";
 import { CompetitionBadge, Numeric, TeamBadge } from "@/components/primitives/Indicators";
-import { DataModeBadge } from "@/components/system/DataMode";
 import { FreshnessBadge, freshnessFromState } from "@/components/system/Freshness";
 import { MetricLabel } from "@/components/system/InfoTip";
 import {
@@ -28,6 +27,9 @@ import {
 } from "@/components/system/Filters";
 import { DateNav, formatDay } from "@/components/football/DateNav";
 import { queries } from "@/lib/api/resources";
+import { DATA_MODE } from "@/lib/api/mode";
+import { DemoRegion } from "@/components/system/DataSources";
+import { MatchesLive } from "@/live/MatchesLive";
 import { competitions } from "@/mock/data";
 import { pct, timeOf } from "@/lib/format";
 import { useSortable } from "@/hooks/useSortable";
@@ -49,8 +51,19 @@ export const Route = createFileRoute("/matches/")({
       },
     ],
   }),
-  component: MatchesPage,
+  component: MatchesRoute,
 });
+
+function MatchesRoute() {
+  if (DATA_MODE === "mock") {
+    return (
+      <DemoRegion>
+        <MatchesPage />
+      </DemoRegion>
+    );
+  }
+  return <MatchesLive />;
+}
 
 const TODAY = "2026-09-04";
 const tabs = ["All", "Upcoming", "Live", "Finished"] as const;

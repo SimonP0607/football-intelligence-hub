@@ -1,4 +1,7 @@
 import { useMemo, useState } from "react";
+import { DATA_MODE } from "@/lib/api/mode";
+import { DemoRegion } from "@/components/system/DataSources";
+import { PicksLive } from "@/live/MarketLive";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
@@ -19,7 +22,6 @@ import {
   OddsCell,
   ProbabilityBar,
 } from "@/components/primitives/Indicators";
-import { DataModeBadge } from "@/components/system/DataMode";
 import { MetricLabel } from "@/components/system/InfoTip";
 import { SegmentedTabs } from "@/components/system/Filters";
 import { queries } from "@/lib/api/resources";
@@ -43,8 +45,19 @@ export const Route = createFileRoute("/picks")({
       },
     ],
   }),
-  component: PicksPage,
+  component: RouteComponent,
 });
+
+function RouteComponent() {
+  if (DATA_MODE === "mock") {
+    return (
+      <DemoRegion>
+        <PicksPage />
+      </DemoRegion>
+    );
+  }
+  return <PicksLive />;
+}
 
 const tabs = [
   "All",

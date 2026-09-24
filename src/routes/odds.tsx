@@ -1,4 +1,7 @@
 import { useMemo, useState } from "react";
+import { DATA_MODE } from "@/lib/api/mode";
+import { DemoRegion } from "@/components/system/DataSources";
+import { OddsLive } from "@/live/MarketLive";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -17,7 +20,6 @@ import { EVIndicator, EdgeIndicator, Numeric, OddsCell } from "@/components/prim
 import { StatusBadge } from "@/components/primitives/StatusBadge";
 import { FreshnessBadge } from "@/components/system/Freshness";
 import { MetricLabel } from "@/components/system/InfoTip";
-import { DataModeBadge } from "@/components/system/DataMode";
 import { FilterBar, NumberFilter, SegmentedTabs, SelectFilter } from "@/components/system/Filters";
 import { ChartContainer, LineMovementChart } from "@/components/analytics/Charts";
 import { fixtureQueries, queries } from "@/lib/api/resources";
@@ -42,8 +44,19 @@ export const Route = createFileRoute("/odds")({
       },
     ],
   }),
-  component: OddsPage,
+  component: RouteComponent,
 });
+
+function RouteComponent() {
+  if (DATA_MODE === "mock") {
+    return (
+      <DemoRegion>
+        <OddsPage />
+      </DemoRegion>
+    );
+  }
+  return <OddsLive />;
+}
 
 const tabs = [
   "Value Scanner",

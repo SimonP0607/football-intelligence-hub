@@ -15,11 +15,13 @@ import {
   ProvenanceChip,
   TeamBadge,
 } from "@/components/primitives/Indicators";
-import { DataModeBadge } from "@/components/system/DataMode";
 import { MetricLabel } from "@/components/system/InfoTip";
 import { SegmentedTabs } from "@/components/system/Filters";
 import { AuditTimeline, EventTimeline } from "@/components/system/Timelines";
 import { fixtureQueries } from "@/lib/api/resources";
+import { DATA_MODE } from "@/lib/api/mode";
+import { DemoRegion } from "@/components/system/DataSources";
+import { MatchCenterLive } from "@/live/MatchCenterLive";
 import { EMPTY, dateTimeOf, num, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { MarketKey, TeamRatings } from "@/types/domain";
@@ -40,8 +42,20 @@ export const Route = createFileRoute("/matches/$fixtureId")({
       },
     ],
   }),
-  component: MatchCenter,
+  component: MatchCenterRoute,
 });
+
+function MatchCenterRoute() {
+  const { fixtureId } = Route.useParams();
+  if (DATA_MODE === "mock") {
+    return (
+      <DemoRegion>
+        <MatchCenter />
+      </DemoRegion>
+    );
+  }
+  return <MatchCenterLive fixtureId={fixtureId} />;
+}
 
 const tabs = ["Overview", "Markets", "Models", "Team Data", "Timeline", "Audit"] as const;
 type Tab = (typeof tabs)[number];
