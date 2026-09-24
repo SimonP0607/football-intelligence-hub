@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { DATA_MODE } from "@/lib/api/mode";
 import { DemoRegion } from "@/components/system/DataSources";
-import { PicksLive } from "@/live/MarketLive";
+import { PicksLive } from "@/live/PicksLive";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";

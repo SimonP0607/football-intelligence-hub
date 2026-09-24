@@ -682,34 +682,103 @@ export interface ModelsOverview {
   models: Section<ModelVersionSummary[]>;
 }
 
+export interface PickEvent {
+  from_status: string | null;
+  to_status: string;
+  at: Iso;
+  reason: string;
+}
+
+export type PickStatus = "shadow" | "qualified" | "published" | "settled";
+
+/** A shadow pick with everything it claims traced to where it came from. */
 export interface PickRow {
   id: number;
   fixture_id: number;
+  fixture: string;
+  competition: string;
+  kickoff_at: Iso;
   market_key: string;
   selection: string;
   line: Dec;
+  status: PickStatus;
   mode: string;
-  status: string;
-  model_version_id: number;
-  decision_rule_version: string;
+  model: string;
+  model_version: string;
+  prediction_id: number | null;
+  data_cutoff_ts: Iso;
+  feature_set_hash: string;
+  /** False: the model's own probability, no calibrator applied. */
+  calibrated: boolean;
+  bookmaker: string;
   market_odds: Dec;
   odds_captured_at: Iso;
-  p_calibrated: Dec;
+  odds_payload_hash: string | null;
+  p_model: Dec;
+  p_lo: Dec | null;
+  p_hi: Dec | null;
   p_market_fair: Dec;
-  edge: Dec;
+  consensus_method: string | null;
+  consensus_as_of: Iso | null;
+  fair_odds: Dec;
+  probability_edge: Dec;
   price_edge: Dec;
   ev: Dec;
+  ev_at_lower_bound: Dec | null;
+  kelly_fraction: Dec;
   stake_units: Dec;
-  data_cutoff_ts: Iso;
-  created_at: Iso;
-  result_status: string | null;
+  stake_policy: string;
+  decision_rule_version: string;
+  code_version: string;
+  qualification: { qualified?: boolean; reasons?: string[]; evidence?: Record<string, unknown> };
+  result_status: string;
   profit_units: Dec | null;
+  settled_at: Iso | null;
+  settlement_basis: string | null;
+  review_reason: string | null;
+  created_at: Iso;
+  events: PickEvent[];
+}
+
+export interface CandidateRow {
+  id: number;
+  fixture_id: number;
+  fixture: string;
+  market_key: string;
+  selection: string;
+  line: Dec;
+  model: string;
+  bookmaker: string | null;
+  market_odds: Dec | null;
+  p_model: Dec;
+  p_market_fair: Dec | null;
+  probability_edge: Dec | null;
+  ev: Dec | null;
+  decision: "selected" | "rejected";
+  rejection_reason: string | null;
+  decision_rule_version: string | null;
+  odds_captured_at: Iso | null;
+  evaluated_at: Iso;
+}
+
+export interface Lifecycle {
+  candidates: number;
+  rejected: number;
+  shadow: number;
+  qualified: number;
+  published: number;
+  settled: number;
 }
 
 export interface PicksOverview {
+  lifecycle: Lifecycle;
+  rule: Record<string, unknown>;
+  rejection_reasons: Record<string, number>;
+  publishing_enabled: false;
   candidates_by_decision: Record<string, number>;
   picks_by_mode: Record<string, number>;
   picks: Section<PickRow[]>;
+  recent_candidates: Section<CandidateRow[]>;
 }
 
 export interface PerformanceSummary {
