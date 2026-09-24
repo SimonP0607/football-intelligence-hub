@@ -1255,3 +1255,39 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Local development against the V2 backend
+
+The app reads the product API of `football-intelligence-v2` (`VITE_API_BASE_URL`,
+default `http://localhost:8010`) in the mode `VITE_DATA_MODE` sets - `live`,
+`hybrid` or `mock`, see `.env.example`. The API-Football key never reaches the
+browser: the web app only ever talks to that API.
+
+```sh
+bun install
+bun run dev            # http://localhost:5173
+```
+
+Or start API, worker and web together from the backend repository with
+`scripts/dev-up` (and stop them with `scripts/dev-down`).
+
+## Checks
+
+```sh
+bun run lint           # eslint + prettier
+bun run typecheck      # the app and the e2e suite
+bun run build
+bun run test:e2e       # Playwright, against the RUNNING stack
+```
+
+`e2e/` clicks through Overview → Match Center, Matches → Match, Odds → Match,
+Models, Picks and Data Quality, and loads every route at 1440, 1280, 1024, 768
+and 390 px. A page fails on a leaked `NaN`, `undefined`, `[object Object]` or
+`Infinity`, a horizontal page scroll, a skeleton still loading once the network
+is idle, a console or page error, or a failed API call. It seeds and mocks
+nothing: where the database is too thin for a step (no captured prices yet),
+the test records a `data` annotation instead of pretending.
+
+For a run, start the API with `FBI_API_RATE_LIMIT=5000` (a full run is ~100
+page loads), and install the browser once with `bunx playwright install chromium`.
+`E2E_BASE_URL` and `E2E_API_URL` point the suite elsewhere.
