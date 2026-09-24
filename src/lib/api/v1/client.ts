@@ -1,5 +1,7 @@
 import { API_BASE_URL } from "@/lib/api/mode";
 import type {
+  AnalystReply,
+  AnalystStatus,
   CompetitionDetail,
   CompetitionSummary,
   CoverageRow,
@@ -8,6 +10,7 @@ import type {
   MatchDetail,
   MatchSummary,
   ModelsOverview,
+  NotificationsOverview,
   OddsIntelligence,
   Overview,
   PerformanceSummary,
@@ -19,6 +22,7 @@ import type {
   SystemHealth,
   TeamDetail,
   TeamSummary,
+  ToolResult,
 } from "./types";
 
 /** An error the API itself reported, or a transport failure. */
@@ -70,6 +74,39 @@ async function getJson<T>(
   return body as T;
 }
 
+async function postJson<T>(path: string, body: unknown): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE_URL}/api/v1${path}`, {
+      method: "POST",
+      headers: { accept: "application/json", "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new LiveApiError(`The API at ${API_BASE_URL} is not reachable.`, 0, "unreachable", null);
+  }
+  const text = await res.text();
+  let parsed: unknown = null;
+  try {
+    parsed = text ? JSON.parse(text) : null;
+  } catch {
+    throw new LiveApiError(`Unexpected response from ${path}.`, res.status, "bad_response", null);
+  }
+  if (!res.ok) {
+    const err = (parsed ?? {}) as {
+      error?: { code?: string; message?: string };
+      request_id?: string;
+    };
+    throw new LiveApiError(
+      err.error?.message ?? `POST ${path} failed (${res.status})`,
+      res.status,
+      err.error?.code ?? "error",
+      err.request_id ?? res.headers.get("x-request-id"),
+    );
+  }
+  return parsed as T;
+}
+
 export interface MatchQuery {
   date_from?: string;
   date_to?: string;
@@ -104,6 +141,11 @@ export const v1 = {
   fixtureOdds: (id: number | string, market?: string) =>
     getJson<Envelope<FixtureOdds>>(`/odds/fixtures/${id}`, { market }),
   oddsIntelligence: () => getJson<Envelope<OddsIntelligence>>("/odds/intelligence"),
+  analyst: () => getJson<Envelope<AnalystStatus>>("/analyst"),
+  analystTool: (name: string, args: Record<string, string | number | undefined>) =>
+    getJson<ToolResult>(`/analyst/tools/${encodeURIComponent(name)}`, args),
+  ask: (question: string) => postJson<Envelope<AnalystReply | null>>("/analyst/ask", { question }),
+  notifications: () => getJson<Envelope<NotificationsOverview>>("/notifications"),
   models: () => getJson<Envelope<ModelsOverview>>("/models"),
   picks: () => getJson<Envelope<PicksOverview>>("/picks"),
   performance: () => getJson<Envelope<PerformanceSummary>>("/performance"),

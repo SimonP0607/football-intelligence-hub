@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DATA_MODE } from "@/lib/api/mode";
 import { DemoRegion } from "@/components/system/DataSources";
-import { NotYetLive } from "@/live/MarketLive";
+import { BacktestingLive } from "@/live/ResearchLive";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Play } from "lucide-react";
@@ -43,15 +43,7 @@ export const Route = createFileRoute("/backtesting")({
 });
 
 function RouteComponent() {
-  if (DATA_MODE === "live") {
-    return (
-      <NotYetLive
-        title="Backtesting"
-        breadcrumb="Research"
-        reason="No backtest has been run against stored data yet. The walk-forward engine (phase 14) writes to analytics.backtest_runs; this page will read those runs, not run anything in the browser."
-      />
-    );
-  }
+  if (DATA_MODE !== "mock") return <BacktestingLive />;
   return (
     <DemoRegion>
       <BacktestingPage />

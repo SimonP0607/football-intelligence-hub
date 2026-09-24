@@ -521,30 +521,3 @@ export function PerformanceLive() {
     </div>
   );
 }
-
-/* ------------------------------------------------------------------------ */
-/* Pages the backend does not serve yet                                     */
-/* ------------------------------------------------------------------------ */
-
-export function NotYetLive({
-  title,
-  breadcrumb,
-  reason,
-}: {
-  title: string;
-  breadcrumb: string;
-  reason: string;
-}) {
-  return (
-    <div className="space-y-4">
-      <PageHeader
-        breadcrumb={[{ label: breadcrumb }, { label: title }]}
-        title={title}
-        description="Live mode: this page shows only what the API serves."
-      />
-      <Panel>
-        <StatusNotice status="not_available" reason={reason} />
-      </Panel>
-    </div>
-  );
-}

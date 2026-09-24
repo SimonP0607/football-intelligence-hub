@@ -30,6 +30,12 @@ export const live = {
     staleTime: 10 * MINUTE,
   },
   models: { queryKey: ["v1", "models"], queryFn: v1.models },
+  analyst: { queryKey: ["v1", "analyst"], queryFn: v1.analyst },
+  notifications: {
+    queryKey: ["v1", "notifications"],
+    queryFn: v1.notifications,
+    refetchInterval: MINUTE,
+  },
   picks: { queryKey: ["v1", "picks"], queryFn: v1.picks },
   performance: { queryKey: ["v1", "performance"], queryFn: v1.performance },
   search: (q: string) => ({

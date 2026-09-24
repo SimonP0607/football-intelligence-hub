@@ -797,3 +797,69 @@ export interface SearchHit {
   label: string;
   sublabel: string;
 }
+
+export interface ToolSpec {
+  name: string;
+  description: string;
+  parameters: {
+    type: string;
+    properties?: Record<string, { type: string; description?: string }>;
+    required?: string[];
+  };
+  endpoint: string;
+}
+
+export interface AnalystStatus {
+  configured: boolean;
+  /** Environment variables still to set on the API host. Never values. */
+  missing: string[];
+  tools: ToolSpec[];
+  rules: string[];
+}
+
+export interface ToolResult {
+  tool: string;
+  arguments: Record<string, unknown>;
+  status: DataStatus | null;
+  reason: string | null;
+  data: unknown;
+  provenance: { endpoint: string; generated_at: Iso; data_as_of: Iso | null; read_only: boolean };
+}
+
+export interface Citation {
+  id: string;
+  tool: string;
+  arguments: Record<string, unknown>;
+  ok: boolean;
+  status: string | null;
+  provenance: ToolResult["provenance"] | null;
+  error: string | null;
+}
+
+export interface AnalystReply {
+  text: string;
+  citations: Citation[];
+  /** Numbers in the answer that no tool result contains. */
+  unverified_figures: string[];
+  rounds: number;
+  stopped: string | null;
+}
+
+export interface NotificationRow {
+  id: number;
+  kind: string;
+  title: string;
+  body: string;
+  created_at: Iso;
+  channel: string | null;
+  status: "queued" | "sent" | "skipped" | "failed";
+  attempts: number;
+  sent_at: Iso | null;
+  last_error: string | null;
+}
+
+export interface NotificationsOverview {
+  channel_configured: boolean;
+  by_status: Record<string, number>;
+  recent: NotificationRow[];
+}

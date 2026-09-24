@@ -37,6 +37,7 @@ import type {
 import { int } from "@/lib/format";
 import { dec, shortHash, utcDate, utcDateTime } from "./format";
 import { baselineLabel, seasonLabel } from "./labels";
+import { Fact } from "./shared";
 
 const NO_BACKTEST = "This model version has no stored walk-forward backtest.";
 
@@ -180,15 +181,6 @@ export function ModelsLive() {
           Performance.
         </div>
       </Panel>
-    </div>
-  );
-}
-
-function Fact({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="min-w-0 py-1.5">
-      <dt className="text-caption uppercase tracking-wider text-subtle-foreground">{label}</dt>
-      <dd className="numeric mt-0.5 text-xs text-foreground">{value}</dd>
     </div>
   );
 }

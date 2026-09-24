@@ -104,3 +104,13 @@ export function FixtureLink({
 export function LiveSourceNote({ children }: { children: React.ReactNode }) {
   return <p className="text-caption text-subtle-foreground">{children}</p>;
 }
+
+/** A label above a value that wraps - for values too long for a KeyValue row. */
+export function Fact({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="min-w-0 py-1.5">
+      <dt className="text-caption uppercase tracking-wider text-subtle-foreground">{label}</dt>
+      <dd className="numeric mt-0.5 text-xs text-foreground">{value}</dd>
+    </div>
+  );
+}
