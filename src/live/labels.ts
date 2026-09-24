@@ -29,3 +29,22 @@ export function seasonLabel(season: number | null | undefined): string {
   if (season === null || season === undefined) return "—";
   return `${season}/${String((season + 1) % 100).padStart(2, "0")}`;
 }
+
+const BOOK_LABEL: Record<string, string> = {
+  pinnacle: "Pinnacle",
+  bet365: "Bet365",
+  AVG: "Market average",
+  MAX: "Best price",
+  betfair_exchange: "Betfair Exchange",
+  betfair_sb: "Betfair Sportsbook",
+  williamhill: "William Hill",
+  bwin: "bwin",
+  interwetten: "Interwetten",
+  betvictor: "BetVictor",
+  "1xbet": "1xBet",
+};
+
+/** A Football-Data bookmaker code, for display. */
+export function bookLabel(code: string): string {
+  return BOOK_LABEL[code] ?? code;
+}

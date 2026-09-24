@@ -24,6 +24,11 @@ export const live = {
     queryKey: ["v1", "fixture-odds", id],
     queryFn: () => v1.fixtureOdds(id),
   }),
+  oddsIntelligence: {
+    queryKey: ["v1", "odds-intelligence"],
+    queryFn: v1.oddsIntelligence,
+    staleTime: 10 * MINUTE,
+  },
   models: { queryKey: ["v1", "models"], queryFn: v1.models },
   picks: { queryKey: ["v1", "picks"], queryFn: v1.picks },
   performance: { queryKey: ["v1", "performance"], queryFn: v1.performance },

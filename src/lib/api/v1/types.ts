@@ -149,13 +149,17 @@ export interface MarketQuote {
 export interface PredictionRow {
   model: string;
   model_version: string;
+  /** 'backtest': a historical replay made walk-forward; 'forecast': made in real time before kick-off. */
+  kind: "backtest" | "forecast";
+  backtest_session_id: number | null;
   market_key: string;
   selection: string;
   line: Dec;
   p_raw: Dec;
   p_calibrated: Dec;
-  p_lo: Dec;
-  p_hi: Dec;
+  /** Null when no interval was computed — never a zero-width interval. */
+  p_lo: Dec | null;
+  p_hi: Dec | null;
   data_cutoff_ts: Iso;
   feature_set_hash: string;
   created_at: Iso;
@@ -283,12 +287,79 @@ export interface ConsensusQuote {
   dispersion: Dec | null;
 }
 
+export interface HistoricalPrice {
+  selection: string;
+  odds_decimal: Dec;
+  raw_implied: Dec;
+}
+
+export interface HistoricalBook {
+  bookmaker_code: string;
+  /** The source's own label. No timestamp exists for either kind. */
+  price_kind: "closing" | "pre_closing";
+  market_key: string;
+  line: Dec;
+  overround: Dec | null;
+  is_composite: boolean;
+  prices: HistoricalPrice[];
+}
+
+export interface HistoricalFair {
+  bookmaker_code: string;
+  price_kind: "closing" | "pre_closing";
+  devig_method: string;
+  p_home: Dec;
+  p_draw: Dec;
+  p_away: Dec;
+  overround: Dec;
+}
+
+export interface HistoricalMarket {
+  source: string;
+  note: string;
+  books: HistoricalBook[];
+  fair_1x2: HistoricalFair[];
+}
+
 export interface FixtureOdds {
   match: MatchSummary;
   board: Section<MarketQuote[]>;
   series: Section<OddsSeries[]>;
   near_close: Section<NearCloseQuote[]>;
   consensus: Section<ConsensusQuote[]>;
+  /** Prices from a second source (Football-Data.co.uk), kept apart from what we captured. */
+  historical: Section<HistoricalMarket | null>;
+}
+
+export interface BookmakerMargin {
+  bookmaker_code: string;
+  price_kind: string;
+  market_key: string;
+  fixtures: number;
+  mean_overround: Dec;
+  median_overround: Dec;
+  best_price_share: Dec | null;
+}
+
+export interface MovementRow {
+  competition_id: number;
+  competition: string;
+  season: number;
+  fixtures: number;
+  mean_abs_home_shift: Dec;
+  favourite_shortened_share: Dec;
+  pre_closing_logloss: Dec;
+  closing_logloss: Dec;
+}
+
+export interface OddsIntelligence {
+  source: string;
+  note: string;
+  fixtures_with_prices: number;
+  seasons: number[];
+  margins: Section<BookmakerMargin[]>;
+  movement: Section<MovementRow[]>;
+  live: Section<Record<string, number>>;
 }
 
 export type ComponentStatus = "ok" | "degraded" | "down" | "unknown";

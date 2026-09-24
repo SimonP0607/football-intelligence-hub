@@ -8,6 +8,7 @@ import type {
   MatchDetail,
   MatchSummary,
   ModelsOverview,
+  OddsIntelligence,
   Overview,
   PerformanceSummary,
   PicksOverview,
@@ -102,6 +103,7 @@ export const v1 = {
   odds: () => getJson<Envelope<MatchSummary[]>>("/odds"),
   fixtureOdds: (id: number | string, market?: string) =>
     getJson<Envelope<FixtureOdds>>(`/odds/fixtures/${id}`, { market }),
+  oddsIntelligence: () => getJson<Envelope<OddsIntelligence>>("/odds/intelligence"),
   models: () => getJson<Envelope<ModelsOverview>>("/models"),
   picks: () => getJson<Envelope<PicksOverview>>("/picks"),
   performance: () => getJson<Envelope<PerformanceSummary>>("/performance"),

@@ -11,9 +11,10 @@ import { useLiveQuery } from "@/components/system/dataSourcesContext";
 import { ApiErrorNotice, Nullable, SectionView } from "@/components/system/LiveState";
 import { live } from "@/lib/api/v1/queries";
 import { LiveApiError } from "@/lib/api/v1/client";
-import type { MatchDetail } from "@/lib/api/v1/types";
+import type { MatchDetail, PredictionRow } from "@/lib/api/v1/types";
 import { int } from "@/lib/format";
 import { dec, decPct, relative, shortHash, utcDateTime } from "./format";
+import { HistoricalMarketTables } from "./HistoricalMarket";
 import { ScoreText, StatusGroupBadge } from "./shared";
 
 const tabs = ["Overview", "Markets", "Models", "Timeline", "Lineage"] as const;
@@ -197,106 +198,223 @@ function OverviewTab({ d }: { d: MatchDetail }) {
 }
 
 function MarketsTab({ d }: { d: MatchDetail }) {
+  const odds = useLiveQuery(live.fixtureOdds(String(d.match.id)));
+  return (
+    <div className="space-y-4">
+      <Panel
+        title="Captured prices"
+        subtitle="Latest price per bookmaker that THIS platform captured. Implied probability is 1/odds: the bookmaker margin is still in it."
+        bodyClassName=""
+      >
+        <SectionView section={d.markets}>
+          {(quotes) => (
+            <TableShell>
+              <THead>
+                <TH>Market</TH>
+                <TH>Selection</TH>
+                <TH>Bookmaker</TH>
+                <TH align="right">Odds</TH>
+                <TH align="right">Implied (raw)</TH>
+                <TH>Captured</TH>
+                <TH>Feed</TH>
+              </THead>
+              <tbody>
+                {quotes.map((qt) => (
+                  <TRow key={`${qt.bookmaker_id}-${qt.market_key}-${qt.selection}-${qt.line}`}>
+                    <TD className="text-xs">
+                      {qt.market_key}
+                      {Number(qt.line) !== 0 ? ` ${dec(qt.line, 2)}` : ""}
+                    </TD>
+                    <TD className="text-sm">{qt.selection}</TD>
+                    <TD className="text-xs text-muted-foreground">{qt.bookmaker}</TD>
+                    <TD align="right">
+                      <Numeric>{dec(qt.odds_decimal, 2)}</Numeric>
+                    </TD>
+                    <TD align="right">
+                      <Numeric muted>{decPct(qt.implied_probability)}</Numeric>
+                    </TD>
+                    <TD>
+                      <span className="numeric text-xs">T-{qt.minutes_to_ko} min</span>
+                      <div className="text-caption text-subtle-foreground">
+                        {utcDateTime(qt.captured_at)}
+                      </div>
+                    </TD>
+                    <TD>
+                      <StatusBadge tone={qt.source === "live" ? "brand" : "neutral"}>
+                        {qt.source}
+                      </StatusBadge>
+                    </TD>
+                  </TRow>
+                ))}
+              </tbody>
+            </TableShell>
+          )}
+        </SectionView>
+      </Panel>
+      <Panel
+        title="Historical market"
+        subtitle="Published by a second source after the fact. Kept apart from our captures, never mixed into them."
+        bodyClassName="pb-2"
+      >
+        {odds.isLoading ? (
+          <TableSkeleton rows={4} cols={7} />
+        ) : odds.isError ? (
+          <div className="p-4">
+            <ApiErrorNotice error={odds.error} />
+          </div>
+        ) : odds.data ? (
+          <SectionView section={odds.data.data.historical}>
+            {(h) => (h ? <HistoricalMarketTables market={h} /> : null)}
+          </SectionView>
+        ) : null}
+      </Panel>
+    </div>
+  );
+}
+
+const SELECTIONS_1X2 = ["Home", "Draw", "Away"] as const;
+
+function ModelsTab({ d }: { d: MatchDetail }) {
+  const odds = useLiveQuery(live.fixtureOdds(String(d.match.id)));
+  const outcome = d.match.score?.outcome_1x2 ?? null;
+  const market =
+    odds.data?.data.historical.status === "ok"
+      ? (odds.data.data.historical.data?.fair_1x2.find(
+          (f) =>
+            f.bookmaker_code === "pinnacle" &&
+            f.price_kind === "closing" &&
+            f.devig_method === "shin",
+        ) ?? null)
+      : null;
   return (
     <Panel
-      title="Markets"
-      subtitle="Latest captured price per bookmaker. Implied probability is 1/odds: the bookmaker margin is still in it."
+      title="Model predictions"
+      subtitle="Probabilities with their data cut-off. Probability is not confidence; the interval is the model's own parameter uncertainty (90%, Laplace)."
       bodyClassName=""
     >
-      <SectionView section={d.markets}>
-        {(quotes) => (
-          <TableShell>
-            <THead>
-              <TH>Market</TH>
-              <TH>Selection</TH>
-              <TH>Bookmaker</TH>
-              <TH align="right">Odds</TH>
-              <TH align="right">Implied (raw)</TH>
-              <TH>Captured</TH>
-              <TH>Feed</TH>
-            </THead>
-            <tbody>
-              {quotes.map((qt) => (
-                <TRow key={`${qt.bookmaker_id}-${qt.market_key}-${qt.selection}-${qt.line}`}>
-                  <TD className="text-xs">
-                    {qt.market_key}
-                    {Number(qt.line) !== 0 ? ` ${dec(qt.line, 2)}` : ""}
-                  </TD>
-                  <TD className="text-sm">{qt.selection}</TD>
-                  <TD className="text-xs text-muted-foreground">{qt.bookmaker}</TD>
-                  <TD align="right">
-                    <Numeric>{dec(qt.odds_decimal, 2)}</Numeric>
-                  </TD>
-                  <TD align="right">
-                    <Numeric muted>{decPct(qt.implied_probability)}</Numeric>
-                  </TD>
-                  <TD>
-                    <span className="numeric text-xs">T-{qt.minutes_to_ko} min</span>
-                    <div className="text-caption text-subtle-foreground">
-                      {utcDateTime(qt.captured_at)}
-                    </div>
-                  </TD>
-                  <TD>
-                    <StatusBadge tone={qt.source === "live" ? "brand" : "neutral"}>
-                      {qt.source}
-                    </StatusBadge>
-                  </TD>
-                </TRow>
-              ))}
-            </tbody>
-          </TableShell>
-        )}
+      <SectionView section={d.predictions}>
+        {(rows) => {
+          const byModel = new Map<string, PredictionRow[]>();
+          for (const r of rows) {
+            const key = `${r.kind}|${r.model}|${r.model_version}`;
+            byModel.set(key, [...(byModel.get(key) ?? []), r]);
+          }
+          const find = (rs: PredictionRow[], mk: string, sel: string) =>
+            rs.find((r) => r.market_key === mk && r.selection === sel) ?? null;
+          const backtest = rows.some((r) => r.kind === "backtest");
+          return (
+            <div>
+              {backtest ? (
+                <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2.5 text-caption text-muted-foreground">
+                  <StatusBadge tone="warning">Backtest replay</StatusBadge>
+                  These were produced by the walk-forward backtest, using only results public before
+                  each cut-off. They are not forecasts that were published before the match.
+                </div>
+              ) : null}
+              <TableShell>
+                <THead>
+                  <TH>Model</TH>
+                  {SELECTIONS_1X2.map((s) => (
+                    <TH key={s} align="right" className={outcome === s ? "text-positive" : ""}>
+                      {s}
+                      {outcome === s ? " ✓" : ""}
+                    </TH>
+                  ))}
+                  <TH align="right">Over 2.5</TH>
+                  <TH align="right">BTTS yes</TH>
+                  <TH>Data cut-off</TH>
+                </THead>
+                <tbody>
+                  {market ? (
+                    <TRow selected>
+                      <TD>
+                        <div className="text-sm">Market · Pinnacle closing · Shin</div>
+                        <div className="text-caption text-subtle-foreground">
+                          de-vigged, second source
+                        </div>
+                      </TD>
+                      <TD align="right">
+                        <Numeric>{decPct(market.p_home)}</Numeric>
+                      </TD>
+                      <TD align="right">
+                        <Numeric>{decPct(market.p_draw)}</Numeric>
+                      </TD>
+                      <TD align="right">
+                        <Numeric>{decPct(market.p_away)}</Numeric>
+                      </TD>
+                      <TD align="right">
+                        <Nullable value={null} reason="Only the 1X2 baseline is shown here." />
+                      </TD>
+                      <TD align="right">
+                        <Nullable value={null} reason="The source publishes no BTTS prices." />
+                      </TD>
+                      <TD className="text-caption text-subtle-foreground">at kick-off</TD>
+                    </TRow>
+                  ) : null}
+                  {[...byModel.entries()].map(([key, rs]) => {
+                    const first = rs[0]!;
+                    return (
+                      <TRow key={key}>
+                        <TD>
+                          <div className="flex items-center gap-2 text-sm">
+                            {MODEL_NAMES[first.model] ?? first.model}
+                            <StatusBadge tone={first.kind === "backtest" ? "neutral" : "brand"}>
+                              {first.kind}
+                            </StatusBadge>
+                          </div>
+                          <div
+                            className="numeric text-caption text-subtle-foreground"
+                            title={first.model_version}
+                          >
+                            {first.model_version.split("@")[0]}
+                          </div>
+                        </TD>
+                        {SELECTIONS_1X2.map((s) => (
+                          <TD key={s} align="right">
+                            <ProbCell row={find(rs, "1X2", s)} />
+                          </TD>
+                        ))}
+                        <TD align="right">
+                          <ProbCell row={find(rs, "OU", "Over")} />
+                        </TD>
+                        <TD align="right">
+                          <ProbCell row={find(rs, "BTTS", "Yes")} />
+                        </TD>
+                        <TD>
+                          <Numeric muted>{utcDateTime(first.data_cutoff_ts)}</Numeric>
+                        </TD>
+                      </TRow>
+                    );
+                  })}
+                </tbody>
+              </TableShell>
+            </div>
+          );
+        }}
       </SectionView>
     </Panel>
   );
 }
 
-function ModelsTab({ d }: { d: MatchDetail }) {
+const MODEL_NAMES: Record<string, string> = {
+  poisson: "Poisson",
+  dixon_coles: "Dixon-Coles",
+  elo_ologit: "Elo + ordered logit",
+};
+
+function ProbCell({ row }: { row: PredictionRow | null }) {
+  if (!row) return <Nullable value={null} reason="This model does not price this market." />;
   return (
-    <Panel
-      title="Model predictions"
-      subtitle="Calibrated probabilities with their data cut-off. Probability is not confidence."
-      bodyClassName=""
-    >
-      <SectionView section={d.predictions}>
-        {(rows) => (
-          <TableShell>
-            <THead>
-              <TH>Model</TH>
-              <TH>Market</TH>
-              <TH>Selection</TH>
-              <TH align="right">P (calibrated)</TH>
-              <TH align="right">Interval</TH>
-              <TH>Data cut-off</TH>
-            </THead>
-            <tbody>
-              {rows.map((p) => (
-                <TRow
-                  key={`${p.model}-${p.model_version}-${p.market_key}-${p.selection}-${p.line}`}
-                >
-                  <TD className="text-xs">
-                    {p.model} {p.model_version}
-                  </TD>
-                  <TD className="text-xs">{p.market_key}</TD>
-                  <TD className="text-sm">{p.selection}</TD>
-                  <TD align="right">
-                    <Numeric>{decPct(p.p_calibrated)}</Numeric>
-                  </TD>
-                  <TD align="right">
-                    <Numeric muted>
-                      {decPct(p.p_lo)} – {decPct(p.p_hi)}
-                    </Numeric>
-                  </TD>
-                  <TD>
-                    <Numeric muted>{utcDateTime(p.data_cutoff_ts)}</Numeric>
-                  </TD>
-                </TRow>
-              ))}
-            </tbody>
-          </TableShell>
+    <div className="numeric">
+      {decPct(row.p_calibrated)}
+      <div className="text-caption text-subtle-foreground">
+        {row.p_lo !== null && row.p_hi !== null ? (
+          `${decPct(row.p_lo, 0)}–${decPct(row.p_hi, 0)}`
+        ) : (
+          <Nullable value={null} reason="No interval was computed for this prediction." />
         )}
-      </SectionView>
-    </Panel>
+      </div>
+    </div>
   );
 }
 

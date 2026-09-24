@@ -5,12 +5,14 @@ import { TableShell, THead, TH, TRow, TD, TableSkeleton } from "@/components/pri
 import { StatusBadge } from "@/components/primitives/StatusBadge";
 import { Numeric } from "@/components/primitives/Indicators";
 import { SegmentedTabs } from "@/components/system/Filters";
+import { MetricLabel } from "@/components/system/InfoTip";
 import { useLiveQuery } from "@/components/system/dataSourcesContext";
 import { ApiErrorNotice, Nullable, SectionView, StatusNotice } from "@/components/system/LiveState";
 import { live } from "@/lib/api/v1/queries";
 import type { MarketQuote, OddsSeries } from "@/lib/api/v1/types";
 import { int } from "@/lib/format";
 import { dec, decPct, relative, utcDate, utcDateTime } from "./format";
+import { bookLabel, seasonLabel } from "./labels";
 import { FixtureLink, StatusGroupBadge } from "./shared";
 
 /* ------------------------------------------------------------------------ */
@@ -20,7 +22,25 @@ import { FixtureLink, StatusGroupBadge } from "./shared";
 const oddsTabs = ["Board", "Movement", "Near-close", "Consensus"] as const;
 type OddsTab = (typeof oddsTabs)[number];
 
+const pageTabs = ["Captured by us", "Historical market"] as const;
+type PageTab = (typeof pageTabs)[number];
+
 export function OddsLive() {
+  const [page, setPage] = useState<PageTab>("Captured by us");
+  return (
+    <div className="space-y-4">
+      <PageHeader
+        breadcrumb={[{ label: "Market" }, { label: "Odds" }]}
+        title="Odds"
+        description="Two sources, never mixed: the prices this platform captured itself, with their capture time, and a second source's historical prices in that source's own terms."
+      />
+      <SegmentedTabs label="Odds source" tabs={pageTabs} value={page} onChange={setPage} />
+      {page === "Captured by us" ? <CapturedOdds /> : <HistoricalMarketLive />}
+    </div>
+  );
+}
+
+function CapturedOdds() {
   const list = useLiveQuery(live.odds);
   const [selected, setSelected] = useState<number | null>(null);
   const fixtures = list.data?.data ?? [];
@@ -28,12 +48,11 @@ export function OddsLive() {
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        breadcrumb={[{ label: "Market" }, { label: "Odds" }]}
-        title="Odds"
-        description="Every price the capturer has stored, per fixture and bookmaker. Implied probabilities are raw (1/odds); de-vigged probabilities appear only in the consensus."
-      />
-      <Panel title="Fixtures with captured prices" bodyClassName="">
+      <Panel
+        title="Fixtures with captured prices"
+        subtitle="Implied probabilities are raw (1/odds); de-vigged probabilities appear only in the consensus."
+        bodyClassName=""
+      >
         {list.isLoading ? (
           <TableSkeleton rows={3} cols={5} />
         ) : list.isError ? (
@@ -313,6 +332,149 @@ function MovementTable({ series }: { series: OddsSeries[] }) {
         })}
       </tbody>
     </TableShell>
+  );
+}
+
+function HistoricalMarketLive() {
+  const q = useLiveQuery(live.oddsIntelligence);
+  const d = q.data?.data;
+  if (q.isError) return <ApiErrorNotice error={q.error} />;
+  if (!d) return <TableSkeleton rows={6} cols={6} />;
+  return (
+    <div className="space-y-4">
+      <WarningBanner tone="info">{d.note}</WarningBanner>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <MetricCard
+          label="Fixtures with historical prices"
+          value={int(d.fixtures_with_prices)}
+          hint={`Seasons ${d.seasons.map((y) => seasonLabel(y)).join(", ") || "—"} · ${d.source}`}
+        />
+        <MetricCard
+          label="Captured by us"
+          value={d.live.status === "ok" ? int(d.live.data["snapshots"] ?? 0) : "0"}
+          hint={d.live.status === "ok" ? "snapshots" : (d.live.reason ?? "")}
+          tone={d.live.status === "ok" ? "default" : "muted"}
+        />
+        <MetricCard
+          label="Live consensus"
+          value={int(d.live.data["consensus_fixtures"] ?? 0)}
+          hint="fixtures with a de-vigged consensus from our captures"
+          tone="muted"
+        />
+      </div>
+      <Panel
+        title="Bookmaker margins"
+        subtitle="Overround per book and price kind: the sum of 1/odds across a market. Best-price share counts how often a named book had the top 1X2 price (ties count for each)."
+        bodyClassName=""
+      >
+        <SectionView section={d.margins}>
+          {(rows) => (
+            <TableShell>
+              <THead>
+                <TH>Book</TH>
+                <TH>Market</TH>
+                <TH>Kind</TH>
+                <TH align="right">Fixtures</TH>
+                <TH align="right">
+                  <MetricLabel term="overround">Mean overround</MetricLabel>
+                </TH>
+                <TH align="right">Median</TH>
+                <TH align="right">Best 1X2 price</TH>
+              </THead>
+              <tbody>
+                {rows.map((r) => (
+                  <TRow key={`${r.bookmaker_code}-${r.market_key}-${r.price_kind}`}>
+                    <TD className="text-sm">{bookLabel(r.bookmaker_code)}</TD>
+                    <TD className="text-xs text-muted-foreground">
+                      {r.market_key === "OU" ? "Over/Under 2.5" : r.market_key}
+                    </TD>
+                    <TD className="text-xs text-muted-foreground">
+                      {r.price_kind === "pre_closing" ? "pre-closing" : r.price_kind}
+                    </TD>
+                    <TD align="right">
+                      <Numeric>{int(r.fixtures)}</Numeric>
+                    </TD>
+                    <TD align="right">
+                      <Numeric>{dec(r.mean_overround, 4)}</Numeric>
+                    </TD>
+                    <TD align="right">
+                      <Numeric muted>{dec(r.median_overround, 4)}</Numeric>
+                    </TD>
+                    <TD align="right">
+                      <Nullable
+                        value={decPct(r.best_price_share)}
+                        reason={
+                          r.bookmaker_code === "AVG"
+                            ? "An average is not a price anyone offered."
+                            : "Only computed for 1X2."
+                        }
+                        className="numeric"
+                      />
+                    </TD>
+                  </TRow>
+                ))}
+              </tbody>
+            </TableShell>
+          )}
+        </SectionView>
+      </Panel>
+      <Panel
+        title="Pre-closing → closing"
+        subtitle="Pinnacle, de-vigged with Shin. How far the price moved between the source's two collections, and which of the two predicted the result better."
+        bodyClassName=""
+      >
+        <SectionView section={d.movement}>
+          {(rows) => (
+            <TableShell>
+              <THead>
+                <TH>Competition</TH>
+                <TH>Season</TH>
+                <TH align="right">Fixtures</TH>
+                <TH align="right">Mean |Δ p(home)|</TH>
+                <TH align="right">Favourite shortened</TH>
+                <TH align="right">
+                  <MetricLabel term="logLoss">Pre-closing log loss</MetricLabel>
+                </TH>
+                <TH align="right">Closing log loss</TH>
+              </THead>
+              <tbody>
+                {rows.map((r) => {
+                  const better = Number(r.closing_logloss) < Number(r.pre_closing_logloss);
+                  return (
+                    <TRow key={`${r.competition_id}-${r.season}`}>
+                      <TD className="text-sm">{r.competition}</TD>
+                      <TD className="numeric text-xs">{seasonLabel(r.season)}</TD>
+                      <TD align="right">
+                        <Numeric>{int(r.fixtures)}</Numeric>
+                      </TD>
+                      <TD align="right">
+                        <Numeric>{decPct(r.mean_abs_home_shift, 2)}</Numeric>
+                      </TD>
+                      <TD align="right">
+                        <Numeric>{decPct(r.favourite_shortened_share)}</Numeric>
+                      </TD>
+                      <TD align="right">
+                        <Numeric muted>{dec(r.pre_closing_logloss, 4)}</Numeric>
+                      </TD>
+                      <TD align="right">
+                        <span className={better ? "numeric text-positive" : "numeric"}>
+                          {dec(r.closing_logloss, 4)}
+                        </span>
+                      </TD>
+                    </TRow>
+                  );
+                })}
+              </tbody>
+            </TableShell>
+          )}
+        </SectionView>
+        <p className="border-t border-border px-4 py-2.5 text-caption text-muted-foreground">
+          The source collects pre-closing prices on Friday or Tuesday afternoons; neither kind has
+          an exact timestamp, so this is movement between two labelled collections, not a line
+          history.
+        </p>
+      </Panel>
+    </div>
   );
 }
 
