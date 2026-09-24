@@ -788,7 +788,11 @@ function ProtocolView({
             <KeyValue label="Shrinkage penalty" value={String(selection.chosen.penalty)} />
             <KeyValue
               label="Candidates scored"
-              value={`${Object.keys(selection.validation_logloss).length} (validation log loss)`}
+              value={
+                selection.validation_logloss
+                  ? `${Object.keys(selection.validation_logloss).length} (validation log loss)`
+                  : "not stored in this session"
+              }
             />
           </div>
         ) : null}

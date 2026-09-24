@@ -92,19 +92,28 @@ function SessionView({ s }: { s: BacktestSessionSummary }) {
 }
 
 function SearchGrid({ kind, sel }: { kind: string; sel: SelectionInfo }) {
+  const scores = sel.validation_logloss ?? {};
+  if (Object.keys(scores).length === 0) {
+    return (
+      <Panel
+        title={`${MODEL_LABEL[kind] ?? kind} · hyper-parameters`}
+        subtitle={`Chosen on ${seasonLabel(sel.validation_season ?? null)}: ξ=${sel.chosen.xi}, penalty=${sel.chosen.penalty}.`}
+      >
+        <p className="text-caption text-muted-foreground">
+          This session stored the chosen values only, not the validation score of every candidate,
+          so the search itself cannot be shown.
+        </p>
+      </Panel>
+    );
+  }
   const xis = sel.final_grid?.xi ?? [
-    ...new Set(
-      Object.keys(sel.validation_logloss).map((k) => Number(k.split(",")[0]!.split("=")[1])),
-    ),
+    ...new Set(Object.keys(scores).map((k) => Number(k.split(",")[0]!.split("=")[1]))),
   ];
   const pens = sel.final_grid?.penalty ?? [
-    ...new Set(
-      Object.keys(sel.validation_logloss).map((k) => Number(k.split(",")[1]!.split("=")[1])),
-    ),
+    ...new Set(Object.keys(scores).map((k) => Number(k.split(",")[1]!.split("=")[1]))),
   ];
-  const score = (xi: number, pen: number) =>
-    sel.validation_logloss[`xi=${xi},penalty=${pen}`] ?? null;
-  const best = Math.min(...Object.values(sel.validation_logloss));
+  const score = (xi: number, pen: number) => scores[`xi=${xi},penalty=${pen}`] ?? null;
+  const best = Math.min(...Object.values(scores));
   const extended =
     sel.initial_grid !== undefined &&
     (sel.final_grid?.xi.length !== sel.initial_grid.xi.length ||

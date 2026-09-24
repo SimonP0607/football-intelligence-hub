@@ -669,7 +669,9 @@ export interface BacktestSessionSummary {
 
 export interface SelectionInfo {
   chosen: { xi: number; penalty: number };
-  validation_logloss: Record<string, number>;
+  /** Every candidate's validation score. A session stores it only since the
+   * grid search was recorded; an older session carries the choice alone. */
+  validation_logloss?: Record<string, number>;
   initial_grid?: { xi: number[]; penalty: number[] };
   final_grid?: { xi: number[]; penalty: number[] };
   validation_season?: number;
