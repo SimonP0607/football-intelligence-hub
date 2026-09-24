@@ -17,6 +17,7 @@ import type {
   PicksOverview,
   QualityIssue,
   QualityReport,
+  Rankings,
   RunSummary,
   SearchHit,
   SystemHealth,
@@ -146,6 +147,8 @@ export const v1 = {
     getJson<ToolResult>(`/analyst/tools/${encodeURIComponent(name)}`, args),
   ask: (question: string) => postJson<Envelope<AnalystReply | null>>("/analyst/ask", { question }),
   notifications: () => getJson<Envelope<NotificationsOverview>>("/notifications"),
+  rankings: (competitionId?: number) =>
+    getJson<Envelope<Rankings | null>>("/rankings", { competition_id: competitionId, limit: 200 }),
   models: () => getJson<Envelope<ModelsOverview>>("/models"),
   picks: () => getJson<Envelope<PicksOverview>>("/picks"),
   performance: () => getJson<Envelope<PerformanceSummary>>("/performance"),

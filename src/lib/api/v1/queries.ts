@@ -36,6 +36,10 @@ export const live = {
     queryFn: v1.notifications,
     refetchInterval: MINUTE,
   },
+  rankings: (competitionId?: number) => ({
+    queryKey: ["v1", "rankings", competitionId ?? "all"],
+    queryFn: () => v1.rankings(competitionId),
+  }),
   picks: { queryKey: ["v1", "picks"], queryFn: v1.picks },
   performance: { queryKey: ["v1", "performance"], queryFn: v1.performance },
   search: (q: string) => ({

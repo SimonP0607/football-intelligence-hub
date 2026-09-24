@@ -863,3 +863,24 @@ export interface NotificationsOverview {
   by_status: Record<string, number>;
   recent: NotificationRow[];
 }
+
+export interface RatingRow {
+  rank: number;
+  team_id: number;
+  team: string;
+  rating: number;
+  matches: number;
+  last_match_at: Iso;
+  last_competition: string;
+  change_last5: number | null;
+  /** Fewer than 10 rated matches: still mostly the starting value. */
+  provisional: boolean;
+}
+
+export interface Rankings {
+  elo_version: string;
+  run_id: number;
+  computed_at: Iso;
+  parameters: string;
+  rows: RatingRow[];
+}
