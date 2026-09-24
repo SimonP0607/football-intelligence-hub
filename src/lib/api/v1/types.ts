@@ -436,16 +436,98 @@ export interface QualityIssue {
   detected_at: Iso;
 }
 
+export interface CalibrationBucket {
+  lower: number;
+  upper: number;
+  n: number;
+  mean_predicted: number | null;
+  observed_rate: number | null;
+}
+
+export interface ScoreSummary {
+  n: number;
+  brier: number;
+  log_loss: number;
+  ece: number;
+}
+
+export type Verdict = "worse" | "indistinguishable" | "better";
+
+/** Model minus market on the fixtures BOTH priced. Negative = the model scored better. */
+export interface MarketComparison {
+  baseline_key: string;
+  market_key: string;
+  line: Dec;
+  n_common: number;
+  model_logloss: Dec;
+  baseline_logloss: Dec;
+  logloss_diff: Dec;
+  logloss_diff_ci_low: Dec;
+  logloss_diff_ci_high: Dec;
+  model_brier: Dec;
+  baseline_brier: Dec;
+  brier_diff: Dec;
+  brier_diff_ci_low: Dec;
+  brier_diff_ci_high: Dec;
+  verdict: Verdict;
+}
+
+export interface SplitRow {
+  key: string;
+  label: string;
+  n: number;
+  model_logloss: number;
+  baseline_logloss: number;
+  logloss_diff: number;
+}
+
+export interface Coverage {
+  targets: number;
+  predicted: number;
+  uncovered: Record<string, number>;
+  fits: number;
+  failed_fits: number;
+  no_interval: number;
+}
+
+export interface HypotheticalBetting {
+  hypothetical: true;
+  rule: string;
+  odds_source: string;
+  fixtures_priced: number;
+  n_bets: number;
+  staked_units: Dec;
+  profit_units: Dec;
+  roi_pct: Dec | null;
+  roi_ci_low: Dec | null;
+  roi_ci_high: Dec | null;
+  max_drawdown_units: Dec | null;
+  mean_probability_edge: number | null;
+  note: string;
+}
+
 export interface BacktestMetrics {
   run_id: number;
   name: string;
   protocol: string;
+  session_id: number | null;
   test_from: string;
   test_to: string;
   n_samples: number;
   brier: Dec;
   logloss: Dec;
   ece: Dec;
+  /** Reported because the table has it. Never used to rank a model. */
+  accuracy_pct: Dec;
+  coverage: Coverage | null;
+  primary: MarketComparison | null;
+  vs_market: MarketComparison[];
+  calibration: CalibrationBucket[];
+  over_under_2_5: ScoreSummary | null;
+  btts: ScoreSummary | null;
+  by_competition: SplitRow[];
+  by_month: SplitRow[];
+  betting: HypotheticalBetting | null;
   odds_source: string | null;
   n_bets: number | null;
   roi_pct: Dec | null;
@@ -463,6 +545,7 @@ export interface ModelVersionSummary {
   version_id: number;
   version: string;
   status: string;
+  hyperparameters: Record<string, unknown>;
   train_from: string;
   train_to: string;
   n_train: number;
@@ -477,8 +560,54 @@ export interface MarketBaselineSummary {
   last_as_of: Iso | null;
 }
 
+export interface BaselineScore {
+  baseline_key: string;
+  source: string;
+  bookmaker_code: string;
+  /** As the SOURCE labels it ('closing', 'pre_closing'); not our capture. */
+  price_kind: string;
+  devig_method: string;
+  market_key: string;
+  line: Dec;
+  n_samples: number;
+  brier: Dec;
+  logloss: Dec;
+  ece: Dec;
+  mean_overround: Dec | null;
+  is_primary: boolean;
+}
+
+export interface BacktestSessionSummary {
+  id: number;
+  session_uuid: string;
+  name: string;
+  protocol: string;
+  competitions: { id: number; name: string }[];
+  validation_season: number | null;
+  test_season: number;
+  test_from: string;
+  test_to: string;
+  n_targets: number;
+  primary_baseline: string;
+  dataset_hash: string;
+  code_version: string;
+  finished_at: Iso | null;
+  selection: Record<string, SelectionInfo>;
+  config: Record<string, unknown>;
+}
+
+export interface SelectionInfo {
+  chosen: { xi: number; penalty: number };
+  validation_logloss: Record<string, number>;
+  initial_grid?: { xi: number[]; penalty: number[] };
+  final_grid?: { xi: number[]; penalty: number[] };
+  validation_season?: number;
+}
+
 export interface ModelsOverview {
   market_baseline: Section<MarketBaselineSummary | null>;
+  backtest: Section<BacktestSessionSummary | null>;
+  historical_baselines: Section<BaselineScore[]>;
   models: Section<ModelVersionSummary[]>;
 }
 

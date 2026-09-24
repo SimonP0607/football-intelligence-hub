@@ -159,6 +159,7 @@ export function SegmentedTabs<T extends string>({
   counts,
   label,
   className,
+  format,
 }: {
   tabs: readonly T[];
   value: T;
@@ -166,6 +167,8 @@ export function SegmentedTabs<T extends string>({
   counts?: Partial<Record<T, number>>;
   label: string;
   className?: string;
+  /** Display text for a tab value; the value itself when omitted. */
+  format?: (value: T) => string;
 }) {
   return (
     <div
@@ -192,7 +195,7 @@ export function SegmentedTabs<T extends string>({
                 : "text-muted-foreground hover:bg-elevated hover:text-foreground",
             )}
           >
-            {t}
+            {format ? format(t) : t}
             {counts?.[t] !== undefined ? (
               <span className="numeric text-caption opacity-70">{counts[t]}</span>
             ) : null}

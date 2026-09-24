@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DATA_MODE } from "@/lib/api/mode";
 import { DemoRegion } from "@/components/system/DataSources";
-import { ModelsLive } from "@/live/MarketLive";
+import { ModelsLive } from "@/live/ModelsLive";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {

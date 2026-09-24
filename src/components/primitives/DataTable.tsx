@@ -3,13 +3,20 @@ import { cn } from "@/lib/utils";
 export function TableShell({
   children,
   className,
+  compact = false,
 }: {
   children: React.ReactNode;
   className?: string;
+  /** Drop the 36rem minimum width: for narrow tables that fit a side column. */
+  compact?: boolean;
 }) {
   return (
     <div className={cn("w-full overflow-x-auto", className)}>
-      <table className="w-full min-w-[36rem] border-collapse text-sm">{children}</table>
+      <table
+        className={cn("w-full border-collapse text-sm", compact ? "min-w-0" : "min-w-[36rem]")}
+      >
+        {children}
+      </table>
     </div>
   );
 }

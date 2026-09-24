@@ -16,13 +16,19 @@ export const glossary = {
   edge: "Model probability minus market probability, in percentage points. Requires both a model probability and an available price to exist.",
   ev: "Expected value: model probability multiplied by the available price, minus one. It is an arithmetic property of the inputs, not a profitability claim.",
   brier:
-    "Mean squared error between predicted probabilities and outcomes. Lower is better; 0.25 is the naive baseline for a coin flip.",
+    "Multi-class Brier score: squared error between the predicted probabilities and the outcome, summed over the outcomes and averaged over matches. Lower is better; 1/3 on each of home, draw and away scores 0.667.",
   logLoss:
     "Negative log likelihood of the observed outcomes under the predicted distribution. Punishes confident mistakes harshly. Lower is better.",
   calibration:
     "Agreement between predicted probability and observed frequency. A perfectly calibrated model lies on the diagonal of the reliability curve.",
   calibrationError:
-    "Mean absolute gap between predicted probability and observed frequency across deciles.",
+    "Expected calibration error (ECE): the gap between predicted probability and observed frequency in ten equal-width probability bins, weighted by how many predictions fall in each bin (every outcome of every match counts).",
+  vsMarket:
+    "Model log loss minus the de-vigged market's log loss on the fixtures both priced, with a 95% paired-bootstrap interval. Negative means the model scored better. 'Better' is claimed only when the whole interval is below zero.",
+  hypotheticalBetting:
+    "A backtest simulation: flat one-unit stakes at the historical source's closing price, by a rule fixed before the test season. It is not a record of bets and not a forecast of returns.",
+  historicalClosing:
+    "Closing and pre-closing prices as published by Football-Data.co.uk. They are the source's labels, not prices this platform captured, and they carry no exact timestamp.",
   nearClose:
     "Price captured close to kickoff (T-12m). It is not validated as an official closing price and must not be reported as closing line value.",
   pickLineValue:
