@@ -10,6 +10,7 @@ export const live = {
   coverage: { queryKey: ["v1", "coverage"], queryFn: v1.coverage },
   issues: { queryKey: ["v1", "issues"], queryFn: v1.issues, refetchInterval: MINUTE },
   runs: { queryKey: ["v1", "runs"], queryFn: () => v1.runs(25) },
+  jobs: { queryKey: ["v1", "jobs"], queryFn: v1.jobs, refetchInterval: MINUTE },
   matches: (q: MatchQuery) => ({ queryKey: ["v1", "matches", q], queryFn: () => v1.matches(q) }),
   match: (id: string) => ({ queryKey: ["v1", "match", id], queryFn: () => v1.match(id) }),
   competitions: { queryKey: ["v1", "competitions"], queryFn: () => v1.competitions() },

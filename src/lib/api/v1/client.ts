@@ -7,6 +7,7 @@ import type {
   CoverageRow,
   Envelope,
   FixtureOdds,
+  JobHealth,
   MatchDetail,
   MatchSummary,
   ModelsOverview,
@@ -126,6 +127,7 @@ export const v1 = {
   coverage: () => getJson<Envelope<CoverageRow[]>>("/data-quality/coverage"),
   issues: () => getJson<Envelope<QualityIssue[]>>("/data-quality/issues"),
   runs: (limit = 20) => getJson<Envelope<RunSummary[]>>("/ingestion/runs", { limit }),
+  jobs: () => getJson<Envelope<JobHealth[]>>("/ops/jobs"),
   matches: (q: MatchQuery = {}) =>
     getJson<Envelope<MatchSummary[]>>("/matches", q as Record<string, string | number | undefined>),
   match: (id: number | string) => getJson<Envelope<MatchDetail>>(`/matches/${id}`),

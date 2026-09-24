@@ -11,9 +11,9 @@ import { live } from "@/lib/api/v1/queries";
 import type { QualitySnapshot } from "@/lib/api/v1/types";
 import { int } from "@/lib/format";
 import { ratio, relative, utcDateTime } from "./format";
-import { RunsPanel } from "./RunsPanel";
+import { JobsPanel, RunsPanel } from "./RunsPanel";
 
-const tabs = ["Issues", "Coverage", "Ingestion runs", "Notes"] as const;
+const tabs = ["Issues", "Coverage", "Jobs", "Ingestion runs", "Notes"] as const;
 type Tab = (typeof tabs)[number];
 
 /** A metric card whose value may be null for a stated reason. */
@@ -159,6 +159,7 @@ export function DataQualityLive() {
   const issues = useLiveQuery(live.issues);
   const coverage = useLiveQuery(live.coverage);
   const runs = useLiveQuery(live.runs);
+  const jobs = useLiveQuery(live.jobs);
 
   const high = (issues.data?.data ?? []).filter(
     (i) => i.severity === "critical" || i.severity === "high",
@@ -319,6 +320,14 @@ export function DataQualityLive() {
             </TableShell>
           )}
         </Panel>
+      ) : null}
+
+      {tab === "Jobs" ? (
+        jobs.isError ? (
+          <ApiErrorNotice error={jobs.error} />
+        ) : (
+          <JobsPanel jobs={jobs.data?.data ?? []} />
+        )
       ) : null}
 
       {tab === "Ingestion runs" ? (

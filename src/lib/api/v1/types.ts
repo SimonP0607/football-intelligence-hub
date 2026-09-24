@@ -884,3 +884,18 @@ export interface Rankings {
   parameters: string;
   rows: RatingRow[];
 }
+
+export interface JobHealth {
+  job_type: string;
+  runs_24h: number;
+  failed_24h: number;
+  partial_24h: number;
+  api_calls_24h: number;
+  last_status: string | null;
+  last_started_at: Iso | null;
+  last_success_at: Iso | null;
+  last_error: string | null;
+  mean_duration_ms: number | null;
+  /** From the worker's last heartbeat; null for manual jobs. */
+  next_run_at: Iso | null;
+}

@@ -9,6 +9,8 @@ export const JOB_LABEL: Record<string, string> = {
   feature_build: "Feature build",
   historical_odds_import: "Historical odds import",
   backtest: "Backtest",
+  pick_pipeline: "Decision pipeline",
+  odds_import: "Odds import",
 };
 
 /** "pinnacle/closing/shin" -> "Pinnacle · closing · shin". */
