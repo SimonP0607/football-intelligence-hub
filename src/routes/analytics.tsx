@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ModulePlaceholder } from "@/components/layout/ModulePlaceholder";
+import { DATA_MODE } from "@/lib/api/mode";
+import { AnalyticsLive } from "@/live/AnalyticsLive";
 
 export const Route = createFileRoute("/analytics")({
   head: () => ({
@@ -20,6 +22,7 @@ export const Route = createFileRoute("/analytics")({
 });
 
 function Page() {
+  if (DATA_MODE !== "mock") return <AnalyticsLive />;
   return (
     <ModulePlaceholder
       breadcrumb={[{ label: "Intelligence" }, { label: "Analytics" }]}

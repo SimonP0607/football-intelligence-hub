@@ -14,10 +14,11 @@ import { LiveApiError } from "@/lib/api/v1/client";
 import type { MatchDetail, PredictionRow } from "@/lib/api/v1/types";
 import { int } from "@/lib/format";
 import { dec, decPct, relative, shortHash, utcDateTime } from "./format";
+import { AuditTrail } from "./AuditTrail";
 import { HistoricalMarketTables } from "./HistoricalMarket";
 import { ScoreText, StatusGroupBadge } from "./shared";
 
-const tabs = ["Overview", "Markets", "Models", "Timeline", "Lineage"] as const;
+const tabs = ["Overview", "Markets", "Models", "Timeline", "Lineage", "Audit"] as const;
 type Tab = (typeof tabs)[number];
 
 export function MatchCenterLive({ fixtureId }: { fixtureId: string }) {
@@ -92,6 +93,7 @@ export function MatchCenterLive({ fixtureId }: { fixtureId: string }) {
         </Panel>
       ) : null}
       {tab === "Lineage" ? <LineageTab d={d} /> : null}
+      {tab === "Audit" ? <AuditTrail fixtureId={fixtureId} /> : null}
     </div>
   );
 }
@@ -400,6 +402,8 @@ const MODEL_NAMES: Record<string, string> = {
   poisson: "Poisson",
   dixon_coles: "Dixon-Coles",
   elo_ologit: "Elo + ordered logit",
+  base_rates: "League base rates",
+  mnlogit: "Multinomial logit",
 };
 
 function ProbCell({ row }: { row: PredictionRow | null }) {

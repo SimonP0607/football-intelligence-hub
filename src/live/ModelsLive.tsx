@@ -45,7 +45,11 @@ const MODEL_LABEL: Record<string, string> = {
   poisson: "Poisson (Maher)",
   dixon_coles: "Dixon-Coles",
   elo_ologit: "Elo V2 + ordered logit",
+  base_rates: "League base rates",
+  mnlogit: "Multinomial logit (features v2)",
 };
+/** Families that price 1X2 only: no goal distribution, so no Over/Under or BTTS. */
+const ONE_X_TWO_ONLY = new Set(["elo_ologit", "base_rates", "mnlogit"]);
 
 const verdictTone: Record<Verdict, BadgeTone> = {
   better: "positive",
@@ -706,8 +710,8 @@ function MarketsView({ model }: { model: ModelVersionSummary }) {
           <StatusNotice
             status="not_available"
             reason={
-              model.name === "elo_ologit"
-                ? "The Elo ordered logit prices 1X2 only: it has no goal distribution."
+              ONE_X_TWO_ONLY.has(model.name)
+                ? `${MODEL_LABEL[model.name] ?? model.name} prices 1X2 only: it has no goal distribution.`
                 : "No Over/Under comparison was stored for this run."
             }
             compact

@@ -10,6 +10,8 @@ const MODEL_LABEL: Record<string, string> = {
   poisson: "Poisson (Maher)",
   dixon_coles: "Dixon-Coles",
   elo_ologit: "Elo V2 + ordered logit",
+  base_rates: "League base rates",
+  mnlogit: "Multinomial logit (features v2)",
 };
 const VERDICT_TEXT: Record<string, string> = {
   better: "Beats market",
@@ -65,7 +67,43 @@ test("Overview → Match Center, every section", async ({ page }, info) => {
     note(info, "the overview lists no fixture on this database");
     return;
   }
-  await everyTab(page, w, ["Markets", "Models", "Timeline", "Lineage", "Overview"]);
+  await everyTab(page, w, ["Markets", "Models", "Timeline", "Lineage", "Audit", "Overview"]);
+});
+
+test("Match Center → Audit shows the chain exactly as the API reconstructs it", async ({
+  page,
+}, info) => {
+  const w = watch(page);
+  const list = await api<Array<{ id: number; home: { name: string }; away: { name: string } }>>(
+    "/api/v1/matches?status=finished&limit=1",
+  );
+  const first = list.data[0];
+  if (!first) {
+    note(info, "no finished fixture on this database");
+    return;
+  }
+  const audit = await api<{ complete: boolean; steps: Array<{ key: string; state: string }> }>(
+    `/api/v1/matches/${first.id}/audit`,
+  );
+  await open(page, w, `/matches/${first.id}`, `${first.home.name} v ${first.away.name}`);
+  await everyTab(page, w, ["Audit"]);
+  expect(audit.data.steps.map((s) => s.key)).toEqual([
+    "provider",
+    "raw",
+    "normalized",
+    "features",
+    "models",
+    "predictions",
+    "market",
+    "picks",
+    "settlement",
+  ]);
+  for (const s of audit.data.steps) {
+    await expect(page.locator(`[data-step="${s.key}"]`)).toHaveAttribute("data-state", s.state);
+  }
+  await expect(page.getByTestId("audit-summary")).toContainText(
+    audit.data.complete ? "Chain complete" : "with a gap",
+  );
 });
 
 test("Matches → Match", async ({ page }) => {
@@ -133,6 +171,44 @@ test("Models: every model is shown against the market", async ({ page }, info) =
   }
   // And the search behind the chosen hyper-parameters.
   await open(page, w, "/backtesting", "Backtesting");
+});
+
+test("Analytics: every section shows what the API computed", async ({ page }, info) => {
+  const w = watch(page);
+  const [profiles, experiments, market, coverage] = await Promise.all([
+    api<Array<{ competition: string; season: number }>>("/api/v1/analytics/competitions"),
+    api<
+      Array<{
+        id: number;
+        model_family: string;
+        research_status: string;
+        reproduction_of: number | null;
+      }>
+    >("/api/v1/analytics/experiments"),
+    api<{ n_fixtures: number }>("/api/v1/analytics/market"),
+    api<Array<{ competition: string }>>("/api/v1/analytics/coverage"),
+  ]);
+  await open(page, w, "/analytics", "Analytics");
+  const main = page.locator("main");
+  const first = profiles.data[0];
+  if (first) await expect(main.getByText(first.competition).first()).toBeVisible();
+  else note(info, "no competition profile on this database");
+  await everyTab(page, w, ["Teams"]);
+  await everyTab(page, w, ["Models"]);
+  if (experiments.data.length === 0) note(info, `no experiment recorded (${experiments.status})`);
+  const originals = experiments.data.filter((e) => e.reproduction_of === null);
+  for (const e of originals) await expect(main.getByText(`#${e.id} ·`)).toBeVisible();
+  await expect(main.getByText("PRODUCTION", { exact: true })).toHaveCount(
+    originals.filter((e) => e.research_status === "PRODUCTION").length,
+  );
+  await everyTab(page, w, ["Market"]);
+  if (market.status === "ok")
+    await expect(
+      main.getByText(market.data.n_fixtures.toLocaleString("en-US")).first(),
+    ).toBeVisible();
+  else note(info, `no market baseline (${market.status})`);
+  await everyTab(page, w, ["Coverage", "Migration", "Competitions"]);
+  expect(coverage.data.length).toBeGreaterThanOrEqual(profiles.data.length > 0 ? 1 : 0);
 });
 
 test("Picks: the lifecycle as the API reports it", async ({ page }, info) => {

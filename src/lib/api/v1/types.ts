@@ -901,3 +901,218 @@ export interface JobHealth {
   /** From the worker's last heartbeat; null for manual jobs. */
   next_run_at: Iso | null;
 }
+
+// ---------------------------------------------------------------------------
+// Match Center -> Audit (GET /matches/{id}/audit)
+// ---------------------------------------------------------------------------
+
+export type AuditScalar = string | number | boolean | null;
+export type AuditStepKey =
+  | "provider"
+  | "raw"
+  | "normalized"
+  | "features"
+  | "models"
+  | "predictions"
+  | "market"
+  | "picks"
+  | "settlement";
+export type AuditStepState = "recorded" | "partial" | "missing" | "not_applicable";
+
+export interface AuditItem {
+  kind: string;
+  ref: string;
+  at: Iso | null;
+  source: string | null;
+  facts: Record<string, AuditScalar>;
+  /** "kind:ref" of the records this one was computed from. */
+  links: string[];
+}
+
+export interface AuditTrailStep {
+  key: AuditStepKey;
+  label: string;
+  state: AuditStepState;
+  detail: string;
+  items: AuditItem[];
+}
+
+export interface MatchAudit {
+  fixture_id: number;
+  provider_fixture_id: number;
+  kickoff_at: Iso;
+  status_group: string;
+  steps: AuditTrailStep[];
+  /** Every step is recorded or not applicable: nothing expected is missing. */
+  complete: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Analytics page (GET /analytics/*)
+// ---------------------------------------------------------------------------
+
+export interface CompetitionProfile {
+  competition_id: number;
+  competition: string;
+  country: string | null;
+  competition_type: string;
+  season: number;
+  fixtures: number;
+  finished: number;
+  low_sample: boolean;
+  home_win: number | null;
+  draw: number | null;
+  away_win: number | null;
+  goals_per_match: number | null;
+  home_goals_per_match: number | null;
+  away_goals_per_match: number | null;
+  home_goal_difference: number | null;
+  btts: number | null;
+  over_2_5: number | null;
+  with_team_stats: number;
+  with_historical_odds: number;
+  with_odds_snapshots: number;
+  with_features: number;
+  with_predictions: number;
+}
+
+export interface EloPoint {
+  fixture_id: number;
+  kickoff_at: Iso;
+  competition: string;
+  opponent: TeamRef;
+  at_home: boolean;
+  rating_before: number;
+  rating_after: number;
+  expected_score: number;
+  actual_score: number;
+}
+
+export interface RecordSplit {
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goals_for: number;
+  goals_against: number;
+  points_per_match: number | null;
+}
+
+export interface ProcessPoint {
+  fixture_id: number;
+  kickoff_at: Iso;
+  source: string;
+  shots_for: number | null;
+  shots_against: number | null;
+  shots_on_target_for: number | null;
+  shots_on_target_against: number | null;
+}
+
+export interface TeamFeatures {
+  fixture_id: number;
+  feature_version: string;
+  data_cutoff: Iso;
+  side: string;
+  values: Record<string, number | null>;
+}
+
+export interface TeamAnalytics {
+  team: TeamRef;
+  splits: Record<"all" | "home" | "away", RecordSplit>;
+  elo: EloPoint[];
+  process: ProcessPoint[];
+  features: TeamFeatures | null;
+}
+
+export interface MarketBucket {
+  lower: number;
+  upper: number;
+  n: number;
+  mean_probability: number | null;
+  observed_rate: number | null;
+}
+
+export interface MarketSeason {
+  competition_id: number;
+  competition: string;
+  season: number;
+  n: number;
+  closing_logloss: number | null;
+  pre_closing_logloss: number | null;
+  closing_improvement: number | null;
+  mean_overround_closing: number | null;
+}
+
+export interface MarketAnalytics {
+  baseline: string;
+  n_fixtures: number;
+  calibration: MarketBucket[];
+  by_season: MarketSeason[];
+  source: string;
+}
+
+export interface GateCheck {
+  name: string;
+  passed: boolean;
+  evidence: string;
+}
+
+export interface ExperimentSummary {
+  id: number;
+  uuid: string;
+  name: string;
+  model_family: string;
+  research_status: "RESEARCH" | "CANDIDATE" | "PRODUCTION" | "RETIRED";
+  gate_passed: boolean;
+  gate: GateCheck[];
+  reproduced: boolean;
+  reproduced_by: number | null;
+  reproduction_of: number | null;
+  backtest_session_id: number | null;
+  code_version: string;
+  dataset_hash: string | null;
+  feature_version: string | null;
+  test_from: string | null;
+  test_to: string | null;
+  own_n: number | null;
+  own_logloss: number | null;
+  own_brier: number | null;
+  own_ece: number | null;
+  market_logloss_diff: number | null;
+  market_diff_low: number | null;
+  market_diff_high: number | null;
+  verdict: string | null;
+  evidence: string | null;
+  dm_p: number | null;
+  by_competition: Array<Record<string, number | string>>;
+  finished_at: Iso | null;
+}
+
+export interface CoverageCell {
+  competition_id: number;
+  competition: string;
+  season: number;
+  fixtures: number;
+  finished: number;
+  with_result: number;
+  with_team_stats: number;
+  with_events: number;
+  with_lineups: number;
+  with_player_stats: number;
+  with_historical_odds: number;
+  with_odds_snapshots: number;
+  with_features: number;
+  with_predictions: number;
+}
+
+export interface MigrationProgress {
+  plan_id: number | null;
+  plan_name: string | null;
+  plan_created_at: Iso | null;
+  planned_requests: number | null;
+  units: Record<string, Record<string, number>>;
+  requests_spent: number;
+  rows_written: number;
+  by_tier: Record<string, Record<string, number>>;
+  last_activity_at: Iso | null;
+}

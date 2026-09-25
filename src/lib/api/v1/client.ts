@@ -3,13 +3,19 @@ import type {
   AnalystReply,
   AnalystStatus,
   CompetitionDetail,
+  CompetitionProfile,
   CompetitionSummary,
+  CoverageCell,
   CoverageRow,
   Envelope,
+  ExperimentSummary,
   FixtureOdds,
   JobHealth,
+  MarketAnalytics,
+  MatchAudit,
   MatchDetail,
   MatchSummary,
+  MigrationProgress,
   ModelsOverview,
   NotificationsOverview,
   OddsIntelligence,
@@ -22,6 +28,7 @@ import type {
   RunSummary,
   SearchHit,
   SystemHealth,
+  TeamAnalytics,
   TeamDetail,
   TeamSummary,
   ToolResult,
@@ -131,6 +138,7 @@ export const v1 = {
   matches: (q: MatchQuery = {}) =>
     getJson<Envelope<MatchSummary[]>>("/matches", q as Record<string, string | number | undefined>),
   match: (id: number | string) => getJson<Envelope<MatchDetail>>(`/matches/${id}`),
+  audit: (id: number | string) => getJson<Envelope<MatchAudit>>(`/matches/${id}/audit`),
   competitions: (tracked?: boolean) =>
     getJson<Envelope<CompetitionSummary[]>>("/competitions", {
       tracked: tracked === undefined ? undefined : String(tracked),
@@ -155,4 +163,11 @@ export const v1 = {
   picks: () => getJson<Envelope<PicksOverview>>("/picks"),
   performance: () => getJson<Envelope<PerformanceSummary>>("/performance"),
   search: (q: string) => getJson<Envelope<SearchHit[]>>("/search", { q, limit: 8 }),
+  competitionProfiles: () => getJson<Envelope<CompetitionProfile[]>>("/analytics/competitions"),
+  teamAnalytics: (id: number | string) =>
+    getJson<Envelope<TeamAnalytics>>(`/analytics/teams/${id}`),
+  marketAnalytics: () => getJson<Envelope<MarketAnalytics>>("/analytics/market"),
+  experiments: () => getJson<Envelope<ExperimentSummary[]>>("/analytics/experiments"),
+  dataCoverage: () => getJson<Envelope<CoverageCell[]>>("/analytics/coverage"),
+  migration: () => getJson<Envelope<MigrationProgress>>("/analytics/migration"),
 };

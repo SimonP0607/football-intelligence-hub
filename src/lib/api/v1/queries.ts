@@ -13,6 +13,7 @@ export const live = {
   jobs: { queryKey: ["v1", "jobs"], queryFn: v1.jobs, refetchInterval: MINUTE },
   matches: (q: MatchQuery) => ({ queryKey: ["v1", "matches", q], queryFn: () => v1.matches(q) }),
   match: (id: string) => ({ queryKey: ["v1", "match", id], queryFn: () => v1.match(id) }),
+  audit: (id: string) => ({ queryKey: ["v1", "audit", id], queryFn: () => v1.audit(id) }),
   competitions: { queryKey: ["v1", "competitions"], queryFn: () => v1.competitions() },
   competition: (id: string) => ({
     queryKey: ["v1", "competition", id],
@@ -43,6 +44,32 @@ export const live = {
   }),
   picks: { queryKey: ["v1", "picks"], queryFn: v1.picks },
   performance: { queryKey: ["v1", "performance"], queryFn: v1.performance },
+  competitionProfiles: {
+    queryKey: ["v1", "analytics", "competitions"],
+    queryFn: v1.competitionProfiles,
+    staleTime: 10 * MINUTE,
+  },
+  teamAnalytics: (id: string) => ({
+    queryKey: ["v1", "analytics", "team", id],
+    queryFn: () => v1.teamAnalytics(id),
+    enabled: id !== "",
+  }),
+  marketAnalytics: {
+    queryKey: ["v1", "analytics", "market"],
+    queryFn: v1.marketAnalytics,
+    staleTime: 10 * MINUTE,
+  },
+  experiments: { queryKey: ["v1", "analytics", "experiments"], queryFn: v1.experiments },
+  dataCoverage: {
+    queryKey: ["v1", "analytics", "coverage"],
+    queryFn: v1.dataCoverage,
+    staleTime: 10 * MINUTE,
+  },
+  migration: {
+    queryKey: ["v1", "analytics", "migration"],
+    queryFn: v1.migration,
+    refetchInterval: MINUTE,
+  },
   search: (q: string) => ({
     queryKey: ["v1", "search", q],
     queryFn: () => v1.search(q),
