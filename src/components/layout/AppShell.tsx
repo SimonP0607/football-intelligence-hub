@@ -9,7 +9,12 @@ import { DataSourcesProvider, PageDataModeBadge } from "@/components/system/Data
 import { DATA_MODE, LIVE_ENABLED } from "@/lib/api/mode";
 import { live } from "@/lib/api/v1/queries";
 import { timeOf } from "@/lib/format";
-import { CommandPalette, destinationFor, searchEntities } from "@/components/system/CommandPalette";
+import {
+  CommandPalette,
+  destinationFor,
+  SEARCH_EMPTY,
+  useEntitySearch,
+} from "@/components/system/CommandPalette";
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -79,7 +84,7 @@ function GlobalSearch({ onOpenPalette }: { onOpenPalette: () => void }) {
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
-  const hits = useMemo(() => searchEntities(term, 6), [term]);
+  const hits = useEntitySearch(term, 6);
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -134,9 +139,7 @@ function GlobalSearch({ onOpenPalette }: { onOpenPalette: () => void }) {
       {open && term.trim() ? (
         <div className="absolute left-0 right-0 top-10 z-40 overflow-hidden rounded-md border border-border bg-card shadow-lg">
           {hits.length === 0 ? (
-            <p className="px-3 py-3 text-xs text-subtle-foreground">
-              No match in the indexed demo dataset.
-            </p>
+            <p className="px-3 py-3 text-xs text-subtle-foreground">{SEARCH_EMPTY}</p>
           ) : (
             <ul>
               {hits.map((h) => (

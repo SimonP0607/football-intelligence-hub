@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, type LinkProps } from "@tanstack/react-router";
 import {
   CommandDialog,
@@ -9,6 +10,8 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { navGroups } from "@/components/layout/nav";
+import { DATA_MODE } from "@/lib/api/mode";
+import { v1 } from "@/lib/api/v1/client";
 import { searchIndex } from "@/mock/research";
 import type { SearchHit, SearchHitType } from "@/types/domain";
 
@@ -19,7 +22,39 @@ const typeLabel: Record<SearchHitType, string> = {
   model: "Models",
 };
 
-/** Global entity + navigation search. Same index the topbar search uses. */
+/** What an empty search says: in demo mode it searched the demo index, in live mode the API. */
+export const SEARCH_EMPTY =
+  DATA_MODE === "mock"
+    ? "No match in the indexed demo dataset."
+    : "No stored fixture, team or competition matches.";
+
+/**
+ * The entity search behind the topbar box and the command palette. Demo mode
+ * searches the demo index; live and hybrid mode ask GET /search, so a demo
+ * fixture can never be offered - or opened - as if it were stored.
+ */
+export function useEntitySearch(term: string, limit = 8): SearchHit[] {
+  const q = term.trim();
+  const live = DATA_MODE !== "mock";
+  const res = useQuery({
+    queryKey: ["v1", "search", q],
+    queryFn: () => v1.search(q),
+    enabled: live && q.length >= 2,
+    staleTime: 60_000,
+  });
+  return useMemo(() => {
+    if (!live) return searchEntities(term, limit);
+    return (res.data?.data ?? []).slice(0, limit).map((h) => ({
+      id: `${h.type}-${h.id}`,
+      type: h.type,
+      label: h.label,
+      sublabel: h.sublabel,
+      fixtureId: h.type === "fixture" ? String(h.id) : null,
+    }));
+  }, [live, term, limit, res.data]);
+}
+
+/** Demo-mode entity search over the demo index. */
 export function searchEntities(term: string, limit = 8): SearchHit[] {
   const q = term.trim().toLowerCase();
   if (!q) return [];
@@ -58,7 +93,7 @@ export function CommandPalette({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onOpenChange]);
 
-  const hits = useMemo(() => searchEntities(term, 12), [term]);
+  const hits = useEntitySearch(term, 12);
   const grouped = useMemo(() => {
     const map = new Map<SearchHitType, SearchHit[]>();
     for (const h of hits) map.set(h.type, [...(map.get(h.type) ?? []), h]);
@@ -83,7 +118,7 @@ export function CommandPalette({
         onValueChange={setTerm}
       />
       <CommandList>
-        <CommandEmpty>No match in the indexed demo dataset.</CommandEmpty>
+        <CommandEmpty>{SEARCH_EMPTY}</CommandEmpty>
         {grouped.map(([type, list]) => (
           <CommandGroup key={type} heading={typeLabel[type]}>
             {list.map((h) => (

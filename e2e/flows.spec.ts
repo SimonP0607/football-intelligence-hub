@@ -106,6 +106,26 @@ test("Match Center → Audit shows the chain exactly as the API reconstructs it"
   );
 });
 
+test("Search: the topbar searches stored data, never the demo index", async ({ page }, info) => {
+  const w = watch(page);
+  const teams = await api<Array<{ id: number; name: string }>>("/api/v1/teams?limit=1");
+  const team = teams.data[0];
+  if (!team) {
+    note(info, "no team stored: nothing to search for");
+    return;
+  }
+  await open(page, w, "/", "Overview");
+  const box = page.getByRole("searchbox", { name: "Search fixtures, teams and models" });
+  await box.fill(team.name.slice(0, Math.min(6, team.name.length)));
+  await expect(
+    page
+      .getByRole("button", { name: new RegExp(team.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")) })
+      .first(),
+  ).toBeVisible();
+  await expect(page.getByText("indexed demo dataset")).toHaveCount(0);
+  await assertClean(page, w);
+});
+
 test("Matches → Match", async ({ page }) => {
   const w = watch(page);
   const list = await api<Array<{ id: number }>>("/api/v1/matches?limit=1");
