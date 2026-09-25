@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/primitives/StatusBadge";
 import type { CalibrationBin, LineMovementSeries, SeriesPoint } from "@/types/domain";
 import { timeOf } from "@/lib/format";
+import { sized, type ChartSize } from "./chartSize";
 
 const axis = {
   stroke: "var(--color-border-strong)",
@@ -83,7 +84,11 @@ export function ChartContainer({
   );
 }
 
-export function LineMovementChart({ series }: { series: LineMovementSeries[] }) {
+export function LineMovementChart({
+  series,
+  width,
+  height,
+}: { series: LineMovementSeries[] } & ChartSize) {
   const times = series[0]?.points.map((p) => p.at) ?? [];
   const data = times.map((at, i) => {
     const row: Record<string, number | string> = { at: timeOf(at) };
@@ -91,7 +96,11 @@ export function LineMovementChart({ series }: { series: LineMovementSeries[] }) 
     return row;
   });
   return (
-    <LineChart data={data} margin={{ top: 6, right: 12, bottom: 0, left: -18 }}>
+    <LineChart
+      {...sized({ width, height })}
+      data={data}
+      margin={{ top: 6, right: 12, bottom: 0, left: -18 }}
+    >
       <CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" vertical={false} />
       <XAxis dataKey="at" {...axis} />
       <YAxis domain={["dataMin - 0.06", "dataMax + 0.06"]} {...axis} width={46} />
@@ -112,14 +121,14 @@ export function LineMovementChart({ series }: { series: LineMovementSeries[] }) 
   );
 }
 
-export function CalibrationChart({ bins }: { bins: CalibrationBin[] }) {
+export function CalibrationChart({ bins, width, height }: { bins: CalibrationBin[] } & ChartSize) {
   const data = bins.map((b) => ({
     predicted: Number((b.predicted * 100).toFixed(1)),
     observed: Number((b.observed * 100).toFixed(1)),
     sample: b.sample,
   }));
   return (
-    <ScatterChart margin={{ top: 6, right: 12, bottom: 0, left: -18 }}>
+    <ScatterChart {...sized({ width, height })} margin={{ top: 8, right: 12, bottom: 0, left: -8 }}>
       <CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" />
       <XAxis
         type="number"
@@ -152,9 +161,13 @@ export function CalibrationChart({ bins }: { bins: CalibrationBin[] }) {
   );
 }
 
-export function EquityCurve({ points }: { points: SeriesPoint[] }) {
+export function EquityCurve({ points, width, height }: { points: SeriesPoint[] } & ChartSize) {
   return (
-    <AreaChart data={points} margin={{ top: 6, right: 12, bottom: 0, left: -18 }}>
+    <AreaChart
+      {...sized({ width, height })}
+      data={points}
+      margin={{ top: 6, right: 12, bottom: 0, left: -18 }}
+    >
       <defs>
         <linearGradient id="equityFill" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.28} />
@@ -177,9 +190,13 @@ export function EquityCurve({ points }: { points: SeriesPoint[] }) {
   );
 }
 
-export function DrawdownChart({ points }: { points: SeriesPoint[] }) {
+export function DrawdownChart({ points, width, height }: { points: SeriesPoint[] } & ChartSize) {
   return (
-    <AreaChart data={points} margin={{ top: 6, right: 12, bottom: 0, left: -18 }}>
+    <AreaChart
+      {...sized({ width, height })}
+      data={points}
+      margin={{ top: 6, right: 12, bottom: 0, left: -18 }}
+    >
       <CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" vertical={false} />
       <XAxis dataKey="at" {...axis} />
       <YAxis width={46} {...axis} />
@@ -201,13 +218,19 @@ export function MonthlyBars({
   data,
   dataKey = "value",
   xKey = "month",
+  width,
+  height,
 }: {
   data: Array<Record<string, string | number>>;
   dataKey?: string;
   xKey?: string;
-}) {
+} & ChartSize) {
   return (
-    <BarChart data={data} margin={{ top: 6, right: 12, bottom: 0, left: -18 }}>
+    <BarChart
+      {...sized({ width, height })}
+      data={data}
+      margin={{ top: 6, right: 12, bottom: 0, left: -18 }}
+    >
       <CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" vertical={false} />
       <XAxis dataKey={xKey} {...axis} />
       <YAxis width={46} {...axis} />
@@ -223,13 +246,21 @@ export function MonthlyBars({
   );
 }
 
-export function ProbabilityBuckets({ bins }: { bins: CalibrationBin[] }) {
+export function ProbabilityBuckets({
+  bins,
+  width,
+  height,
+}: { bins: CalibrationBin[] } & ChartSize) {
   const data = bins.map((b) => ({
     bucket: `${Math.round(b.predicted * 100)}%`,
     sample: b.sample,
   }));
   return (
-    <BarChart data={data} margin={{ top: 6, right: 12, bottom: 0, left: -18 }}>
+    <BarChart
+      {...sized({ width, height })}
+      data={data}
+      margin={{ top: 6, right: 12, bottom: 0, left: -18 }}
+    >
       <CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" vertical={false} />
       <XAxis dataKey="bucket" {...axis} />
       <YAxis width={46} {...axis} />
